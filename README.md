@@ -42,9 +42,9 @@
     <br /> -->
     Acoustic data collection for speech enabled technologies in moving vehicles.
     <br />
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md">Documentation</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md">Documentation</a>
     ·
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/CAVEMOVE_demo.ipynb">View Demo</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb">View Demo</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
@@ -70,11 +70,12 @@
       </ul>
     </li>
     <li><a href="#quick-start">Quick Start</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <!-- <li><a href="#roadmap">Roadmap</a></li> -->
+    <li><a href="#documentation">Documentation</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <!-- <li><a href="#acknowledgments">Acknowledgments</a></li> -->
   </ol>
 </details>
 
@@ -176,13 +177,13 @@ components = my_car.get_mixture_components(mic_setup='array', position='d', cond
 
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/CAVEMOVE_demo.ipynb)._
+_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DOCUMENTATION -->
 ## Documentation
-For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md) file.
+For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- ROADMAP -->

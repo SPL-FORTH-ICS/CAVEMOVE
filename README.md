@@ -126,7 +126,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 3. Install dependancies
    ```sh
-   pip install -r requirements.txt
+   pip install -r source/requirements.txt
    ```
 
 4. Change git remote url to avoid accidental pushes to base project

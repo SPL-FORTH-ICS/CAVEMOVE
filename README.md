@@ -182,7 +182,7 @@ _For more examples, please refer to the [Documentation](https://github.com/SPL-F
 
 <!-- DOCUMENTATION -->
 ## Documentation
-For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md) file.
+For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- ROADMAP -->

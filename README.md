@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href=https://github.com/SPL-FORTH-ICS/CAVEMOVE>
-    <img src="source/references_16kHz/images/cavemoveLogoJune2024.png" alt="Logo" >
+    <img src="source/images/cavemoveLogoJune2024.png" alt="Logo" >
   </a>
 
   <h3 align="center">CAVEMOVE</h3>

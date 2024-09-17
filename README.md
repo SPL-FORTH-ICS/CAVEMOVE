@@ -44,7 +44,7 @@
     <br />
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md">Documentation</a>
     ·
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/CAVEMOVE_demo.ipynb">View Demo</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb">View Demo</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·

@@ -176,7 +176,7 @@ components = my_car.get_mixture_components(mic_setup='array', position='d', cond
 
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/CAVEMOVE_demo.ipynb)._
+_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

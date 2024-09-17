@@ -42,7 +42,7 @@
     <br /> -->
     Acoustic data collection for speech enabled technologies in moving vehicles.
     <br />
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/documentation.md">Documentation</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md">Documentation</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/CAVEMOVE_demo.ipynb">View Demo</a>
     ·

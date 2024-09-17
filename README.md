@@ -239,7 +239,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Nikolaos Stefanakis - nstefana@ics.forth.gr
+Nikolaos Stefanakis - nstefana@ics.forth.gr\
+Andreas Symiakakis - andrsymi@ics.forth.gr
 
 Project Link: [https://github.com/SPL-FORTH-ICS/CAVEMOVE/](https://github.com/SPL-FORTH-ICS/CAVEMOVE/)
 

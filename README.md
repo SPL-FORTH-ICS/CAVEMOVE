@@ -85,7 +85,7 @@
 ## About The Project
 CAVEMOVE is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
 
-This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo at liiiiiiink. In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
+This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo at :exclamation: liiiiiiink :exclamation:. In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
 
 CAVEMOVE API is currently available in python, but a Matlab version will soon follow. Some basic principles followed in CAVEMOVE are the following. 
 - We provide functions for retrieving speech and noise components as separate python entities (numpy arrays). Users must manually add the speech and noise components to derive a mixture.
@@ -136,7 +136,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
    ```sh
    git clone https://github.com/SPL-FORTH-ICS/CAVEMOVE
    ```
-2. Download CAVEMOVE dataset from  lllliiiiiiiiiinkkkkkk
+2. Download CAVEMOVE dataset from :exclamation: lllliiiiiiiiiinkkkkkk :exclamation:
     ```sh
 
     ```
@@ -167,30 +167,50 @@ import librosa
 dataset_path = 'path/to/cavemove/dataset'
 car_names = ['Volkswagen_Golf', 'AlfaRomeo_146', 'Smart_forfour']
 car_path = os.path.join(dataset_path, car_names[0])
+radio_path = 'path/to/radio.wav'
+voice_path = '/path/to/voice.wav'
 
 my_car = Car(path=car_path)
 
-# You can use get_mixture_components to get only noise recording. Function returns a list containing only of the noise recording
-components = my_car.get_mixture_components(mic_setup='array', position='d', condition='s50_w0', mics=[0, 2], fs=16000)
+my_mic_setup = 'array'
+my_position = 'd50'
+my_condition = 's50_w1_ver1'
+my_l_s = 70
+my_l_a = 60
+my_mics = [0, 1, 2, 3, 4, 5, 6, 7]
+my_vent_level = 1
 
-# by providing l_s, dry_speech and dry_speech_fs the function returns a list containing noise and speech component.
-voice_path = 'path/to/dry/speech'
-dry_voice, fs_dry_voice = librosa.load(voice_path, sr=16000)
+my_car = Car(path=car_path)
 
-components = my_car.get_mixture_components(mic_setup='array', position='d', condition='s50_w0', mics=[0, 2], fs=16000, l_s=60, dry_speech=dry_voice, dry_speech_fs=fs_dry_voice)
+# Get noise component
+n = my_car.get_noise(mic_setup=my_mic_setup,
+                     condition=my_condition, mics=my_mics)
 
-# by providing l_a, radio_audio and radio_audio_fs the function returns list containing noise and radio components.
-radio_path = 'path/to/radio/song'
-radio_tune, fs_radio_tune = librosa.load(radio_path, sr=16000)
+# Get speech component
+dry_voice, fs_dry_voice = librosa.load(voice_path, sr=my_car.fs)
+s = my_car.get_speech(mic_setup=my_mic_setup, position=my_position,
+                      condition=my_condition, l_s=my_l_s, dry_speech=dry_voice, mics=my_mics)
 
-components = my_car.get_mixture_components(mic_setup='array', position='d', condition='s50_w0', mics=[0, 2], fs=16000,l_a=50, radio_audio=radio_tune, radio_audio_fs=fs_radio_tune)
+# Get radio component
+radio_tune, fs_radio = librosa.load(radio_path, sr=my_car.fs)
+a = my_car.get_radio(mic_setup=my_mic_setup, condition=my_condition,
+                     l_a=my_l_a, radio_audio=radio_tune, mics=my_mics)
 
-# by providing vent_level the function returns list containing noise and ventilation components.
-components = my_car.get_mixture_components(mic_setup='array', position='d', condition='s50_w0', mics=[0, 2], fs=16000, vent_level=1)
+# Get ventilation component
+v = my_car.get_ventilation(
+                           mic_setup=my_mic_setup, condition=my_condition, level=my_vent_level, mics=my_mics)
 
-# finally, get_mixture components can return all the above combinations or all of the components by providing te correspodins arguments
-components = my_car.get_mixture_components(mic_setup='array', position='d', condition='s50_w0', mics=[0, 2], fs=16000, l_s=60, dry_speech=dry_voice, dry_speech_fs=fs_dry_voice, l_a=50, radio_audio=radio_tune, radio_audio_fs=fs_radio_tune, vent_level=1)
+# Match duration of components to speech duration
+[s_new, a_new, v_new, n_new] = Car.match_duration([s, a, v, n], my_car.fs)
 
+# Mix
+mix = s_new + a_new + v_new + n_new
+
+
+# Finally, get_components can return all the above components or cominations of those, in matched duration.by providing te correspodins arguments. See Documentation for more info
+components = my_car.get_components(mic_setup=my_mic_setup, position=my_position, condition=my_condition,
+                                   mics=my_mics, l_s=my_l_s, dry_speech=dry_voice, l_a=my_l_a, radio_audio=radio_tune,
+                                   vent_level=1)
 
 ```
 

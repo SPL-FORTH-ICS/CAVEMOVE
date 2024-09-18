@@ -83,8 +83,24 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+CAVEMOVE is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
 
-Project dercription here
+This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo at liiiiiiink. In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
+
+CAVEMOVE API is currently available in python, but a Matlab version will soon follow. Some basic principles followed in CAVEMOVE are the following. 
+- We provide functions for retrieving speech and noise components as separate python entities (numpy arrays). Users must manually add the speech and noise components to derive a mixture.
+- Noise recordings are derived as a function of driving conditions, mainly the speed (in km/hour) and the window aperture (3 or 4 different windows conditions are considered in each vehicle)
+-Apart from the basic noise components, we also provide means for adding ventilation/air-condition noise and also, interference from the built-in car audio system (e.g. radio, cd player etc)
+-To produce the speech components, users must provide their own dry speech recordings 
+-To produce the car-audio components, users must provide their own audio signals.
+
+For any questions with respect to CAVEMOVE dataset or API, feel free to send an email to 
+Andreas Symiakakis at  andrysmi@ics.forth.gr 
+or
+Nikos Stefanakis at nstefana@ics.forth.gr
+
+CAVEMOVE project is funded by the Institute of Computer Science of the Foundation for Research and Technology-Hellas (FORTH).
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

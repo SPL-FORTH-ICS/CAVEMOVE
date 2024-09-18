@@ -146,9 +146,10 @@ This section should list any major frameworks/libraries used to bootstrap your p
 ```python
 from Car import Car
 import os
+import librosa
 
 dataset_path = 'path/to/cavemove/dataset'
-car_namea = ['Volkswagen_Golf', 'AlfaRomeo_146', 'AlfaRomeo_146']
+car_names = ['Volkswagen_Golf', 'AlfaRomeo_146', 'Smart_forfour']
 car_path = os.path.join(dataset_path, car_names[0])
 
 my_car = Car(path=car_path)

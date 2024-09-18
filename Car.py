@@ -82,6 +82,11 @@ class Car:
             # with open(ref_file, 'r') as f:
             #     self.__reference_mic = json.load(f)
 
+            # Correction gains
+            gains_file = os.path.join('source', 'correction_gains', 'gains.json')
+            with open(gains_file, 'r') as f:
+                self.__correction_gains = json.load(f)
+
     def __repr__(self):
         return f'Car(path={self.__path!r}, json_info=False, info_dict={self.__in_dict!r})'
         
@@ -232,6 +237,16 @@ class Car:
     def speaker_locations(self, value):
         """Prevents setting the speaker locations."""
         raise AttributeError('Cannot set speaker_locations.')  
+    
+    @property
+    def correction_gains(self):
+        """Returns a dictionary of correction gains."""
+        return self.__correction_gains
+    
+    @correction_gains.setter
+    def correction_gains(self, value):
+        """Prevents setting the correction gains."""
+        raise AttributeError('Cannot set correction_gains.')
         
     
     # private methods
@@ -624,7 +639,9 @@ class Car:
             # Apply correction factor to selected microphone
             convolved_x = np.convolve(dry_speech, ir[:, mic], mode='full')
             # print('Convolved x level :', 20 * np.log10(Car.calculate_rms(convolved_x)))
-            convolved_x *= gain
+            # apply correction gain
+            mic_gain = gain * self.correction_gains[str(mic)]
+            convolved_x *= mic_gain
             ###############
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_x, ir_fs)
             ###############           
@@ -665,6 +682,9 @@ class Car:
         if mics is None:
             mics = range(noise.shape[1])
         noise = noise[:, mics] 
+        # apply correction gain
+        gains = [self.correction_gains[str(mic)] for mic in mics]
+        noise = noise * np.array(gains)
         ###############
         # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_noise)))
         ###############
@@ -743,7 +763,9 @@ class Car:
         result = []
         for mic in mics:
             convolved_radio_ir = np.convolve(radio_audio, radio_ir[:, mic], mode='full')
-            convolved_radio_ir *= gain
+            # apply correction gain
+            mic_gain = gain * self.correction_gains[str(mic)]
+            convolved_radio_ir *= mic_gain
             result.append(convolved_radio_ir)
             # resample to fs
             ###############
@@ -794,14 +816,14 @@ class Car:
             mics = [mics]
         if mics is None:
             mics = range(ventilation.shape[1])
-        result = []
-        for mic in mics:
-            result.append(ventilation[:, mic])
+        ventilation = ventilation[:, mics]
+        # apply correction gain
+        gains = [self.correction_gains[str(mic)] for mic in mics]
+        ventilation = ventilation * np.array(gains)
         ###############
         # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_ventilation)))
         ###############
-        result = np.array(result).T
-        return result  
+        return ventilation  
     
 
     def get_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None):

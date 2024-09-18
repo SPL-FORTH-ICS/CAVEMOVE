@@ -534,9 +534,11 @@ This method adjusts the duration of each element in the list `n` to match the du
 >
 
 **Example:**
- ``` signals = [np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3])]```
-    >>> fs = 44100
-    >>> matched_signals = Car.match_duration(signals, fs)
+ ```python
+ signals = [np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3])]
+ fs = 44100
+ matched_signals = Car.match_duration(signals, fs)
+ ```
 
 
 ---

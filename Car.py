@@ -220,18 +220,18 @@ class Car:
         raise AttributeError('Cannot set ventilation_recordings.')
     
     @property
-    def speaker_positions(self):
-        """Returns a dictionary of available speaker positions per microphone configuration."""
+    def speaker_locations(self):
+        """Returns a dictionary of available speaker locations per microphone configuration."""
         natsort_key = natsort_keygen(key=lambda y: y.lower())
-        positions = {}
+        locations = {}
         for mic_setup in self.mic_setups:
-            positions[mic_setup] = sorted(list(set([s.split('w')[0][:-1] for s in self.irs[mic_setup]])), key=natsort_key)
-        return positions
+            locations[mic_setup] = sorted(list(set([s.split('w')[0][:-1] for s in self.irs[mic_setup]])), key=natsort_key)
+        return locations
     
-    @speaker_positions.setter
-    def speaker_positions(self, value):
-        """Prevents setting the speaker positions."""
-        raise AttributeError('Cannot set speaker_positions.')  
+    @speaker_locations.setter
+    def speaker_locations(self, value):
+        """Prevents setting the speaker locations."""
+        raise AttributeError('Cannot set speaker_locations.')  
         
     
     # private methods
@@ -256,7 +256,7 @@ class Car:
             return None
         
     @classmethod
-    def __calculate_rms_mean(cls, x):
+    def __calculate_rms(cls, x):
         """
         Calculates the root mean square (RMS) mean of the given array.
 
@@ -386,15 +386,15 @@ class Car:
         
 
     # instance methods
-    def speaker_positions_angles(self, mic_setup):
+    def speaker_locations_angles(self, mic_setup):
         """
-        Returns the speaker positions and their corresponding angles for microphone array configurations.
+        Returns the speaker locations and their corresponding angles for microphone array configurations.
         
         Args:
             mic_setup (str): The microphone setup to use.
         
         Returns:
-            dict or None: A dictionary with speaker positions as keys and their corresponding angles as values.
+            dict or None: A dictionary with speaker locations as keys and their corresponding angles as values.
                           Returns None if the microphone setup is 'distributed'.
         
         Raises:
@@ -550,7 +550,7 @@ class Car:
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
-        if position not in self.speaker_positions[mic_setup]:
+        if position not in self.speaker_locations[mic_setup]:
             raise ValueError(f"Position {position} is not available.")
         if l_s < 0:
             raise ValueError(f"Speech effort must be positive.")
@@ -562,8 +562,8 @@ class Car:
         ir_condition = f'{position}_w{w_condition}'
         ir, ir_fs = self.load_ir(mic_setup, ir_condition)
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
-        # print('ir_reference_level : ', 20 * np.log10(Car.calculate_rms_mean(ir_reference)))
-        # print('x : ', 20 * np.log10(Car.calculate_rms_mean(x)))
+        # print('ir_reference_level : ', 20 * np.log10(Car.calculate_rms(ir_reference)))
+        # print('x : ', 20 * np.log10(Car.calculate_rms(x)))
         
         #########################3
         # ir_ref_path = '/media/andreas/1TB/FORTH/CAVEMOVE/Smart_array_plw1-5.wav'
@@ -580,12 +580,12 @@ class Car:
         # plt.show()
         ###########
         # x_filtered = waveform_analysis.A_weight(x, 48000)
-        # x_filtered_level = 20 * np.log10(Car.calculate_rms_mean(x_filtered))
+        # x_filtered_level = 20 * np.log10(Car.calculate_rms(x_filtered))
         # ir_filtered = waveform_analysis.A_weight(ir, 48000)
-        # ir_filtered_level = 20 * np.log10(Car.calculate_rms_mean(ir_filtered))
+        # ir_filtered_level = 20 * np.log10(Car.calculate_rms(ir_filtered))
         ###########
         convolved_reference_ir = np.convolve(dry_speech, ir_reference, mode='full')
-        # print('convolved_reference_ir_level  : ', 20 * np.log10(Car.calculate_rms_mean(convolved_reference_ir)))
+        # print('convolved_reference_ir_level  : ', 20 * np.log10(Car.calculate_rms(convolved_reference_ir)))
 
         # convolved_reference_ir = convolved_reference_ir
         # Apply A-weighting filter
@@ -596,7 +596,7 @@ class Car:
         #####################
         # NO VAD
         # Calculate RMS mean
-        convolved_reference_ir_rms = Car.__calculate_rms_mean(convolved_reference_ir)
+        convolved_reference_ir_rms = Car.__calculate_rms(convolved_reference_ir)
         # to dB
         convolved_reference_ir_level = 20 * np.log10(convolved_reference_ir_rms)
         # print('convolved_reference_ir_filtered_level  : ', convolved_reference_ir_level)
@@ -623,14 +623,14 @@ class Car:
         for mic in mics:
             # Apply correction factor to selected microphone
             convolved_x = np.convolve(dry_speech, ir[:, mic], mode='full')
-            # print('Convolved x level :', 20 * np.log10(Car.calculate_rms_mean(convolved_x)))
+            # print('Convolved x level :', 20 * np.log10(Car.calculate_rms(convolved_x)))
             convolved_x *= gain
             ###############
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_x, ir_fs)
             ###############           
             result.append(convolved_x)
             ###############
-            # print('voice dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(convolved_x_filtered)))
+            # print('voice dB_fs_a:', 20 * np.log10(Car.calculate_rms(convolved_x_filtered)))
             ###############
         result = np.array(result).T
         return result
@@ -666,7 +666,7 @@ class Car:
             mics = range(noise.shape[1])
         noise = noise[:, mics] 
         ###############
-        # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(filtered_noise)))
+        # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_noise)))
         ###############
         return noise
     
@@ -729,7 +729,7 @@ class Car:
         # convolved_radio_reference_ir = Car.a_weighting_filter(convolved_radio_reference_ir)
         convolved_radio_reference_ir= waveform_analysis.A_weight(convolved_radio_reference_ir, radio_ir_fs)
         # Calculate RMS mean
-        convolved_radio_ir_rms = Car.__calculate_rms_mean(convolved_radio_reference_ir)
+        convolved_radio_ir_rms = Car.__calculate_rms(convolved_radio_reference_ir)
         # to dB
         convolved_radio_ir_level = 20 * np.log10(convolved_radio_ir_rms)
         level = convolved_radio_ir_level + db_fsa_to_db_a[self.__reference_mic[mic_setup]] 
@@ -750,7 +750,7 @@ class Car:
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_radio_ir, radio_ir_fs)
             ###############
             ###############
-            # print('radio dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(convolved_x_filtered)))
+            # print('radio dB_fs_a:', 20 * np.log10(Car.calculate_rms(convolved_x_filtered)))
             ###############
         result = np.array(result).T
         return result
@@ -798,13 +798,13 @@ class Car:
         for mic in mics:
             result.append(ventilation[:, mic])
         ###############
-        # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(filtered_ventilation)))
+        # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_ventilation)))
         ###############
         result = np.array(result).T
         return result  
     
 
-    def get_mixture_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None):
+    def get_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None):
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -863,7 +863,7 @@ class Car:
 
         return out
 
-    def steering_vectors(self, freq, theta):
+    def construct_steering_vector(self, freq, theta):
         """
         Calculates the steering vectors for a given frequency and angle for a microphone array configuration.
         The center of the microphone array is the acoustic center. 0 degrees point towards the rear middle passenger,

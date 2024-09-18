@@ -856,7 +856,7 @@ class Car:
         l.append(n)
         
         # s, a, v, n
-        out = Car.match_duration(l, fs)
+        out = Car.match_duration(l, self.fs)
 
         # n, s, a, v
         out = [out[-1]] + out[:-1]

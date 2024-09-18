@@ -20,12 +20,14 @@ class Car:
 
     Args:
     path (str): The path to the car recordings.
+    fs (int): The sampling frequency of the recordings. Defaults to 16000.
     json_info (bool): A boolean indicating whether the car information is stored in a json file inside path. Defaults to True.
     info_dict (dict): A dictionary containing the car information. Defaults to None. Is *json_info* is True, *info_dict* is ignored.
     """
-    def __init__(self, path, json_info= True, info_dict = None):
+    def __init__(self, path, fs=16000, json_info=True, info_dict =None):
         self.__path = path
         self.__json_info = json_info
+        self.__fs = fs
         # if json_info, ignore info_dict
         if self.__json_info:
             info_file = os.path.join(self.__path, 'info.json')
@@ -129,6 +131,16 @@ class Car:
     def year(self, value):
         """Prevents setting the year of the car."""
         raise AttributeError('Cannot set year.')
+    
+    @property
+    def fs(self):
+        """Returns the sampling frequency."""
+        return self.__fs
+    
+    @fs.setter
+    def fs(self, value):
+        """Sets the sampling frequency."""
+        self.__fs = value
     
     @property
     def mic_setups(self):
@@ -418,7 +430,7 @@ class Car:
 
         Args:
             mic_setup (str): The microphone setup to load the noise recording for.
-            condition (str): The specific noise condition to load (speed condition + window condition).
+            condition (str): The specific noise condition to load ("speed condition_window condition").
 
         Returns:
             tuple: A tuple containing the noise data as a NumPy array (N_samples x M_channels) and the sampling frequency of noise recording.
@@ -431,6 +443,9 @@ class Car:
         noise_path = os.path.join(self.__path, mic_setup, 'noise', condition + '.wav')
         # s, fs_noise = librosa.load(noise_path, sr=fs, mono=False)
         noise, fs_noise = sf.read(noise_path)
+        if fs_noise != self.fs:
+            noise = librosa.resample(noise, orig_sr=fs_noise, target_sr=self.fs, axis=0)
+            fs_noise = self.fs
         return noise, fs_noise
     
     def load_ir(self, mic_setup: str, condition):
@@ -439,7 +454,7 @@ class Car:
         
         Args:
             mic_setup (str): The microphone setup to load the IR for.
-            condition (str): The specific IR condition to load (speaker position + window condition).
+            condition (str): The specific IR condition to load ("speaker position_window condition").
         
         Returns:
             tuple: A tuple containing the IR data as a NumPy array (N_samples x M_channels) and the sampling frequency of IR.
@@ -452,6 +467,9 @@ class Car:
         ir_path = os.path.join(self.__path, mic_setup, 'IRs', condition + '.wav')
         # ir, fs_ir = librosa.load(ir_path, sr=48000, mono=False)
         ir, fs_ir = sf.read(ir_path)
+        if fs_ir != self.fs:
+            ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
+            fs_ir = self.fs
         return ir, fs_ir
     
     def load_radio_ir(self, mic_setup: str, condition):
@@ -460,7 +478,7 @@ class Car:
         
         Args:
             mic_setup (str): The microphone setup to load the IR for.
-            condition (str): The specific IR condition to load (window condition).
+            condition (str): The specific IR condition to load ("window condition").
         
         Returns:
             tuple: A tuple containing the IR data as a NumPy array (N_samples x M_channels) and the sampling frequency of radio IR.
@@ -475,7 +493,10 @@ class Car:
             raise ValueError(f"Radio IR condition {condition} is not in Car.radio_irs[condition].")
         ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')
         # ir, fs_ir = librosa.load(ir_path, sr=fs, mono=False)
-        ir, fs_ir = sf.read(ir_path)    
+        ir, fs_ir = sf.read(ir_path) 
+        if fs_ir != self.fs:
+            ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
+            fs_ir = self.fs   
         return ir, fs_ir
     
 
@@ -485,7 +506,7 @@ class Car:
         
         Args:
             mic_setup (str): The microphone setup to load the ventilation recording for.
-            condition (str): The specific ventilation condition to load (ventilation level + window condition).
+            condition (str): The specific ventilation condition to load ("ventilation level_window condition").
         
         Returns:
             tuple: A tuple containing the ventilation data as a NumPy array (N_samples x M_channels) and the sampling frequency.
@@ -498,22 +519,24 @@ class Car:
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
         # ventilation, fs_ventilation = librosa.load(ventilation_path, sr=fs, mono=False)
         ventilation, fs_ventilation = sf.read(ventilation_path)
+        if fs_ventilation != self.fs:
+            ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)
+            fs_ventilation = self.fs
         return ventilation, fs_ventilation
 
 
-    def get_speech(self, mic_setup: str, position: str, condition: str, l_s: float, dry_speech, dry_speech_fs, mics=None, fs=None):
+    def get_speech(self, mic_setup: str, position: str, condition: str, l_s: float, dry_speech, mics=None):
         """
         Generates the convolved speech signal with the corresponding impulse response for a given microphone setup, position, and condition.
         
         Args:
             mic_setup (str): The microphone setup to use.
             position (str): The position of the speaker.
-            condition (str): The condition of the recording (speaker position + window condition).
+            condition (str): The condition of the recording ("speaker position_window condition").
             l_s (float): The speech effort level.
             dry_speech (numpy.ndarray): The input speech signal vector.
             dry_speech_fs (int): The sampling frequency of the input speech signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            fs (int, optional): The target sampling frequency for the output signal. Defaults to None.
         
         Returns:
             numpy.ndarray: The processed speech signal for the specified microphones.
@@ -536,8 +559,6 @@ class Car:
             raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        if fs is not None and fs != dry_speech_fs:
-            dry_speech = librosa.resample(dry_speech, orig_sr=dry_speech_fs, target_sr=fs)
         ir_condition = f'{position}_w{w_condition}'
         ir, ir_fs = self.load_ir(mic_setup, ir_condition)
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
@@ -606,11 +627,7 @@ class Car:
             convolved_x *= gain
             ###############
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_x, ir_fs)
-            ###############
-            # resample to fs
-            if fs is not None and fs != ir_fs:
-                convolved_x = librosa.resample(convolved_x, orig_sr=ir_fs, target_sr=fs)
-            
+            ###############           
             result.append(convolved_x)
             ###############
             # print('voice dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(convolved_x_filtered)))
@@ -619,15 +636,14 @@ class Car:
         return result
     
 
-    def get_noise(self, mic_setup:str, condition:str, mics=None, fs=None):
+    def get_noise(self, mic_setup:str, condition:str, mics=None):
         """
         Retrieves the in-motion noise recording for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific noise condition to load (speed condition + window condition).
+            condition (str): The specific noise condition to load ("speed condition_window condition").
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            fs (int, optional): The target sampling frequency for the output signal. Defaults to None.
         
         Returns:
             numpy.ndarray: The processed noise signal.
@@ -649,29 +665,23 @@ class Car:
         if mics is None:
             mics = range(noise.shape[1])
         noise = noise[:, mics] 
-        # resample to fs
-        if fs is not None and fs != fs_noise:
-            for i in range(noise.shape[1]):
-                noise[:, i] = librosa.resample(noise[:, i], orig_sr=fs_noise, target_sr=fs)
-        
         ###############
         # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(filtered_noise)))
         ###############
         return noise
     
 
-    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, radio_audio_fs, mics=None, fs=None):
+    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None):
         """
         Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific condition to load (speed condition + window condition).
+            condition (str): The specific condition to load ("speed condition_window condition").
             l_a (float): The radio audio level.
             radio_audio (numpy.ndarray): The input audio signal vector.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            fs (int, optional): The target sampling frequency for the output signal. Defaults to None.
         
         Returns:
             numpy.ndarray: The processed audio signal for the specified microphones.
@@ -691,8 +701,6 @@ class Car:
             raise ValueError(f"Window condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        if fs is not None and fs != radio_audio_fs:
-            radio_audio = librosa.resample(radio_audio, orig_sr=radio_audio_fs, target_sr=fs)
         
         db_fsa_to_db_a = {
             0: 124.8755,
@@ -736,13 +744,11 @@ class Car:
         for mic in mics:
             convolved_radio_ir = np.convolve(radio_audio, radio_ir[:, mic], mode='full')
             convolved_radio_ir *= gain
+            result.append(convolved_radio_ir)
             # resample to fs
             ###############
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_radio_ir, radio_ir_fs)
             ###############
-            if fs is not None and fs != radio_ir_fs:
-                convolved_radio_ir = librosa.resample(convolved_radio_ir, orig_sr=radio_ir_fs, target_sr=fs)
-            result.append(convolved_radio_ir)
             ###############
             # print('radio dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(convolved_x_filtered)))
             ###############
@@ -750,16 +756,15 @@ class Car:
         return result
 
 
-    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None, fs=None):
+    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None):
         """
         Retrieves and processes the ventilation recording for a given microphone setup, condition, and ventilation level.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific condition to load (speed condition + window condition).
+            condition (str): The specific condition to load ("speed condition_window condition").
             level (int): The ventilation level (must be 1, 2, or 3).
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            fs (int, optional): The target sampling frequency for the output signal. Defaults to None.
         
         Returns:
         numpy.ndarray: The processed ventilation signal for the specified microphones.
@@ -791,11 +796,7 @@ class Car:
             mics = range(ventilation.shape[1])
         result = []
         for mic in mics:
-            if fs is not None and fs != ventilation_fs:
-                ventilation = librosa.resample(ventilation[:, mic], orig_sr=ventilation_fs, target_sr=fs)
-                result.append(ventilation)
-            else:
-                result.append(ventilation[:, mic])
+            result.append(ventilation[:, mic])
         ###############
         # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms_mean(filtered_ventilation)))
         ###############
@@ -803,7 +804,7 @@ class Car:
         return result  
     
 
-    def get_mixture_components(self, mic_setup, position, condition, mics, fs, l_s=None, dry_speech=None, dry_speech_fs=None, l_a=None,  radio_audio=None, radio_audio_fs=None, vent_level=None):
+    def get_mixture_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None):
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -812,15 +813,12 @@ class Car:
         Args:
             mic_setup (str): The microphone setup to use.
             position (str): The position of the speaker.
-            condition (str): The condition of the recording (speed condition + window condition).
+            condition (str): The condition of the recording ("speed condition_window condition").
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            fs (int): The target sampling frequency for the output signal.
             l_s (float, optional): The speech effort level. Defaults to None.
             dry_speech (numpy.ndarray, optional): The input speech signal vector.
-            dry_speech_fs (int, optional): The sampling frequency of the input speech signal.
             l_a (float, optional): The reference audio level. Defaults to None.
             radio_audio (numpy.ndarray, optional): The input audio signal vector.
-            radio_audio_fs (int, optional): The sampling frequency of the input audio signal.
             vent_level (float, optional): The ventilation level. Defaults to None.
         
         Returns:
@@ -836,33 +834,25 @@ class Car:
         if l_s:
             if dry_speech is None:
                 raise ValueError("Dry speech must be provided if l_s is provided.")
-            if dry_speech_fs is None:
-                raise ValueError("Dry speech sampling frequency must be provided if l_s is provided.")
             # voice, fs_voice = sf.read(voice_path)
             # make mono
             # if dry_speech.ndim > 1:
                 # dry_speech = np.mean(dry_speech,axis=1)
-            if fs is not None and fs != dry_speech_fs:
-                dry_speech = librosa.resample(dry_speech, orig_sr=dry_speech_fs, target_sr=fs)
-            sp = self.get_speech(mic_setup=mic_setup, position=position, condition=condition, l_s=l_s, dry_speech=dry_speech, dry_speech_fs=dry_speech_fs, mics=mics, fs=fs)
+            sp = self.get_speech(mic_setup=mic_setup, position=position, condition=condition, l_s=l_s, dry_speech=dry_speech, mics=mics)
             l.append(sp)
         if l_a:
             if radio_audio is None:
                 raise ValueError("Radio audio must be provided if l_a is provided.")
-            if radio_audio_fs is None:
-                raise ValueError("Radio audio sampling frequency must be provided if l_a is provided.")
-            if fs is not None and fs != radio_audio_fs:
-                radio_audio = librosa.resample(radio_audio, orig_sr=radio_audio_fs, target_sr=fs)
             # radio_audio, a_fs = sf.read(radio_path)
             # make mono
             # if radio_audio.ndim > 1:
                 # radio_audio = np.mean(radio_audio,axis=1)
-            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, l_a=l_a, radio_audio=radio_audio, radio_audio_fs=radio_audio_fs, mics=mics, fs=fs)
+            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, l_a=l_a, radio_audio=radio_audio, mics=mics)
             l.append(radio_audio)
         if vent_level:
-            vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics, fs=fs)
+            vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics)
             l.append(vent)
-        n = self.get_noise(mic_setup=mic_setup, condition=condition, mics=mics, fs=fs)
+        n = self.get_noise(mic_setup=mic_setup, condition=condition, mics=mics)
         l.append(n)
         
         # s, a, v, n

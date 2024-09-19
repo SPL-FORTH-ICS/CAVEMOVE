@@ -1,11 +1,6 @@
-# from dataclasses import dataclass, field
 from natsort import natsort_keygen
 # from source.vad import vad_mean_rms
-# from typing import List, Optional, Dict
-import scipy.signal as signal
 import os
-import time
-# import re
 import librosa
 import json
 import soundfile as sf
@@ -48,7 +43,6 @@ class Car:
         self.__noises = {}
         self.__radio_irs = {}
         self.__references = {}
-        # self.__reference_mic = {}
         self.__ventilation = {}
         natsort_key = natsort_keygen(key=lambda y: y.lower()) 
 
@@ -76,11 +70,6 @@ class Car:
             ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
             with open(ref_file, 'r') as f:
                 self.__references[mic_setup] = json.load(f)
-
-            # # Reference_mic
-            # ref_file = os.path.join(self.__path, mic_setup, 'reference', 'reference_mic.json')
-            # with open(ref_file, 'r') as f:
-            #     self.__reference_mic = json.load(f)
 
             # Correction gains
             gains_file = os.path.join('source', 'correction_gains', 'gains.json')
@@ -187,16 +176,6 @@ class Car:
     def radio_irs(self, value):
         """Prevents setting the radio IRs."""
         raise AttributeError('Cannot set radio_irs.')
-    
-    # @property
-    # def __references(self):
-    #     """Returns a dictionary of available reference levels for every speaker condition per microphone configuration."""
-    #     return self.__references
-    
-    # @__references.setter
-    # def __references(self, value):
-    #     """Prevents setting the reference recordings."""
-    #     raise AttributeError('Cannot set reference_recordings.')
     
     @property
     def __reference_mic(self):
@@ -454,10 +433,13 @@ class Car:
             ValueError: If the given noise condition is not available for the given microphone setup.
         """
         if condition not in self.noise_recordings[mic_setup]:
-            raise ValueError(f"Noise condition {condition} is not available.")
+            new_condition = condition + '_ver1'
+            if new_condition not in self.noise_recordings[mic_setup]:
+                raise ValueError(f"Noise condition {condition} is not available in Car.noise_recordings[mic_setup].")
+            condition = new_condition
         noise_path = os.path.join(self.__path, mic_setup, 'noise', condition + '.wav')
-        # s, fs_noise = librosa.load(noise_path, sr=fs, mono=False)
         noise, fs_noise = sf.read(noise_path)
+        # resample
         if fs_noise != self.fs:
             noise = librosa.resample(noise, orig_sr=fs_noise, target_sr=self.fs, axis=0)
             fs_noise = self.fs
@@ -478,10 +460,10 @@ class Car:
             ValueError: If the given IR condition is not available for the given microphone setup.
         """
         if condition not in self.irs[mic_setup]:
-            raise ValueError(f"IR condition {condition} is not in Car.irs[condition].")
+            raise ValueError(f"IR condition {condition} is not in Car.irs[mic_setup].")
         ir_path = os.path.join(self.__path, mic_setup, 'IRs', condition + '.wav')
-        # ir, fs_ir = librosa.load(ir_path, sr=48000, mono=False)
         ir, fs_ir = sf.read(ir_path)
+        # resample
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs
@@ -507,8 +489,8 @@ class Car:
         if condition not in self.radio_irs[mic_setup]:
             raise ValueError(f"Radio IR condition {condition} is not in Car.radio_irs[condition].")
         ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')
-        # ir, fs_ir = librosa.load(ir_path, sr=fs, mono=False)
         ir, fs_ir = sf.read(ir_path) 
+        # resmaple
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs   
@@ -532,22 +514,22 @@ class Car:
         if condition not in self.ventilation_recordings[mic_setup]:
             raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[condition].")
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
-        # ventilation, fs_ventilation = librosa.load(ventilation_path, sr=fs, mono=False)
         ventilation, fs_ventilation = sf.read(ventilation_path)
+        # resample
         if fs_ventilation != self.fs:
             ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)
             fs_ventilation = self.fs
         return ventilation, fs_ventilation
 
 
-    def get_speech(self, mic_setup: str, location: str, condition: str, ls: float, dry_speech, mics=None, use_correction_gains=True):
+    def get_speech(self, mic_setup: str, location: str, window:int, ls: float, dry_speech, mics=None, use_correction_gains=True):
         """
         Generates the convolved speech signal with the corresponding impulse response for a given microphone setup, location, and condition.
         
         Args:
             mic_setup (str): The microphone setup to use.
             location (str): The location of the speaker.
-            condition (str): The condition of the recording ("speaker location_window condition").
+            window (int): The window condition.
             ls (float): The speech effort level.
             dry_speech (numpy.ndarray): The input speech signal vector.
             dry_speech_fs (int): The sampling frequency of the input speech signal.
@@ -570,66 +552,24 @@ class Car:
             raise ValueError(f"location {location} is not available.")
         if ls < 0:
             raise ValueError(f"Speech effort must be positive.")
-        w_condition = int(condition.split('_')[0][-1])
-        if w_condition not in [0, 1, 2, 3]:
+        if window not in [0, 1, 2, 3]:
             raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        ir_condition = f'{location}_w{w_condition}'
+        ir_condition = f'{location}_w{window}'
         ir, ir_fs = self.load_ir(mic_setup, ir_condition)
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
-        # print('ir_reference_level : ', 20 * np.log10(Car.calculate_rms(ir_reference)))
-        # print('x : ', 20 * np.log10(Car.calculate_rms(x)))
-        
-        #########################3
-        # ir_ref_path = '/media/andreas/1TB/FORTH/CAVEMOVE/Smart_array_plw1-5.wav'
-        # ir_path = '/media/andreas/1TB/FORTH/CAVEMOVE/Smart_array_plw1-1.wav'
-
-        # ir, ir_fs = sf.read(ir_path)
-        # ir_reference, _ = sf.read(ir_ref_path)
-        ########################
-        # plt.plot(ir)
-        # plt.title('IR')
-        # plt.figure()
-        # plt.plot(ir_reference)
-        # plt.title('IR - ref')
-        # plt.show()
-        ###########
-        # x_filtered = waveform_analysis.A_weight(x, 48000)
-        # x_filtered_level = 20 * np.log10(Car.calculate_rms(x_filtered))
-        # ir_filtered = waveform_analysis.A_weight(ir, 48000)
-        # ir_filtered_level = 20 * np.log10(Car.calculate_rms(ir_filtered))
-        ###########
         convolved_reference_ir = np.convolve(dry_speech, ir_reference, mode='full')
-        # print('convolved_reference_ir_level  : ', 20 * np.log10(Car.calculate_rms(convolved_reference_ir)))
-
-        # convolved_reference_ir = convolved_reference_ir
-        # Apply A-weighting filter
-        # convolved_reference_ir = Car.a_weighting_filter(convolved_reference_ir)
         convolved_reference_ir= waveform_analysis.A_weight(convolved_reference_ir, ir_fs)
-
-        # TODO: Choose if vad is applied or optional
-        #####################
-        # NO VAD
         # Calculate RMS mean
         convolved_reference_ir_rms = Car.__calculate_rms(convolved_reference_ir)
         # to dB
         convolved_reference_ir_level = 20 * np.log10(convolved_reference_ir_rms)
-        # print('convolved_reference_ir_filtered_level  : ', convolved_reference_ir_level)
-        
-        # convolved_reference_ir_level = 10 * np.log10(convolved_reference_ir_rms)
 
-        # print('no vad:', convolved_reference_ir_level)
-        #####################
-        # VAD
-        # convolved_x_rms = vad_mean_rms(convolved_x_a_filtered[:, 0], fs=fs)
-        # print('vad:', convolved_x_rms)
-        #####################
         reference = self.__references[mic_setup][ir_condition] + (ls - 72.5)
         # Calculate correction factor
         correction_factor = reference - convolved_reference_ir_level
         gain = 10 ** (correction_factor / 20)
-        # print('Gain:', gain)
 
         if not isinstance(mics, list):
             mics = [mics]
@@ -639,31 +579,28 @@ class Car:
         for mic in mics:
             # Apply correction factor to selected microphone
             convolved_x = np.convolve(dry_speech, ir[:, mic], mode='full')
-            # print('Convolved x level :', 20 * np.log10(Car.calculate_rms(convolved_x)))
             # apply correction gain
             if use_correction_gains:
                 mic_gain = gain * self.correction_gains[str(mic)]
                 convolved_x *= mic_gain
             else:
                 convolved_x *= gain
-            ###############
-            # convolved_x_filtered = waveform_analysis.A_weight(convolved_x, ir_fs)
-            ###############           
+         
             result.append(convolved_x)
-            ###############
-            # print('voice dB_fs_a:', 20 * np.log10(Car.calculate_rms(convolved_x_filtered)))
-            ###############
+
         result = np.array(result).T
         return result
     
 
-    def get_noise(self, mic_setup:str, condition:str, mics=None, use_correction_gains=True):
+    def get_noise(self, mic_setup:str, speed:int, window:int, version:int=None, mics=None, use_correction_gains=True):
         """
         Retrieves the in-motion noise recording for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific noise condition to load ("speed condition_window condition").
+            speed (int): The speed condition.
+            window (int): The window condition.
+            version (int, optional): The version of the noise recording in case there are multiple versions. Defaults to None.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
@@ -678,10 +615,13 @@ class Car:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
+        if window not in [0, 1, 2, 3]:
+            raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
+        condition = f's{speed}_w{window}'
+        if version:
+            condition += f'_ver{version}'
         noise, fs_noise = self.load_noise(mic_setup, condition)
-        ###############
-        # filtered_noise = waveform_analysis.A_weight(noise, fs_noise)
-        ###############
+
         if not isinstance(mics, list):
             mics = [mics]
         if mics is None:
@@ -691,19 +631,17 @@ class Car:
         if use_correction_gains:
             gains = [self.correction_gains[str(mic)] for mic in mics]
             noise = noise * np.array(gains)
-        ###############
-        # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_noise)))
-        ###############
+
         return noise
     
 
-    def get_radio(self, mic_setup: str, condition: str, la: float, radio_audio, mics=None, use_correction_gains=True):
+    def get_radio(self, mic_setup: str, window:int, la: float, radio_audio, mics=None, use_correction_gains=True):
         """
         Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific condition to load ("speed condition_window condition").
+            window (int): The window condition.
             la (float): The radio audio level.
             radio_audio (numpy.ndarray): The input audio signal vector.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
@@ -723,8 +661,7 @@ class Car:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
         if la < 0:
             raise ValueError(f"Audio level must be positive.")
-        w_condition = int(condition.split('_')[0][-1])
-        if w_condition not in [0, 1, 2, 3]:
+        if window not in [0, 1, 2, 3]:
             raise ValueError(f"Window condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
@@ -740,20 +677,12 @@ class Car:
             7: 124.9133,
             }
              
-        radio_ir_condition = f'w{w_condition}'
+        radio_ir_condition = f'w{window}'
         radio_ir, radio_ir_fs = self.load_radio_ir(mic_setup, radio_ir_condition)
         radio_ir_reference = radio_ir[:, self.__reference_mic[mic_setup]]
-        # radio_ir = radio_ir[:, mic]
-        # plt.plot(radio_ir)
-        # plt.title('Radio IR')
-        # plt.show()
-        # convolved_radio_ir = []
-        # for i in range(radio_ir.shape[1]):
-        #     convolved_radio_ir.append(np.convolve(a, radio_ir[:, i], mode='same'))
-        # convolved_radio_ir = np.array(convolved_radio_ir).T
+
         convolved_radio_reference_ir = np.convolve(radio_audio, radio_ir_reference, mode='full')
         # Apply A-weighting filter
-        # convolved_radio_reference_ir = Car.a_weighting_filter(convolved_radio_reference_ir)
         convolved_radio_reference_ir= waveform_analysis.A_weight(convolved_radio_reference_ir, radio_ir_fs)
         # Calculate RMS mean
         convolved_radio_ir_rms = Car.__calculate_rms(convolved_radio_reference_ir)
@@ -777,24 +706,17 @@ class Car:
             else:
                 convolved_radio_ir *= gain
             result.append(convolved_radio_ir)
-            # resample to fs
-            ###############
-            # convolved_x_filtered = waveform_analysis.A_weight(convolved_radio_ir, radio_ir_fs)
-            ###############
-            ###############
-            # print('radio dB_fs_a:', 20 * np.log10(Car.calculate_rms(convolved_x_filtered)))
-            ###############
         result = np.array(result).T
         return result
 
 
-    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None, use_correction_gains=True):
+    def get_ventilation(self, mic_setup: str, window:int, level: int, mics=None, use_correction_gains=True):
         """
         Retrieves and processes the ventilation recording for a given microphone setup, condition, and ventilation level.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific condition to load ("speed condition_window condition").
+            window (int): The window condition.
             level (int): The ventilation level (must be 1, 2, or 3).
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
@@ -812,16 +734,12 @@ class Car:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
         if level not in [1, 2, 3]:
             raise ValueError(f"Ventilation level must be 1, 2 or 3.")
-        w_condition = int(condition.split('_')[0][-1])
-        if w_condition not in [0, 1, 2, 3]:
+        if window not in [0, 1, 2, 3]:
             raise ValueError(f"Window condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        ventilation_condition = f'v{level}_w{w_condition}'
+        ventilation_condition = f'v{level}_w{window}'
         ventilation, ventilation_fs = self.load_ventilation(mic_setup, ventilation_condition)
-        ###############
-        # filtered_ventilation = waveform_analysis.A_weight(ventilation, ventilation_fs)
-        ###############
         # resample to fs
         if not isinstance(mics, list):
             mics = [mics]
@@ -832,13 +750,10 @@ class Car:
         if use_correction_gains:
             gains = [self.correction_gains[str(mic)] for mic in mics]
             ventilation = ventilation * np.array(gains)
-        ###############
-        # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_ventilation)))
-        ###############
         return ventilation  
     
 
-    def get_components(self, mic_setup, location, condition, mics, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
+    def get_components(self, mic_setup, location, speed:int, window:int, version=None, mics=None, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -847,7 +762,9 @@ class Car:
         Args:
             mic_setup (str): The microphone setup to use.
             location (str): The location of the speaker.
-            condition (str): The condition of the recording ("speed condition_window condition").
+            speed (int): The speed condition.
+            window (int): The window condition.
+            version (int, optional): The version of the noise recording in case there are multiple versions. Defaults to None.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             ls (float, optional): The speech effort level. Defaults to None.
             dry_speech (numpy.ndarray, optional): The input speech signal vector.
@@ -869,25 +786,17 @@ class Car:
         if ls:
             if dry_speech is None:
                 raise ValueError("Dry speech must be provided if ls is provided.")
-            # voice, fs_voice = sf.read(voice_path)
-            # make mono
-            # if dry_speech.ndim > 1:
-                # dry_speech = np.mean(dry_speech,axis=1)
-            sp = self.get_speech(mic_setup=mic_setup, location=location, condition=condition, ls=ls, dry_speech=dry_speech, mics=mics, use_correction_gains=use_correction_gains)
+            sp = self.get_speech(mic_setup=mic_setup, location=location, window=window, ls=ls, dry_speech=dry_speech, mics=mics, use_correction_gains=use_correction_gains)
             l.append(sp)
         if la:
             if radio_audio is None:
                 raise ValueError("Radio audio must be provided if la is provided.")
-            # radio_audio, a_fs = sf.read(radio_path)
-            # make mono
-            # if radio_audio.ndim > 1:
-                # radio_audio = np.mean(radio_audio,axis=1)
-            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, la=la, radio_audio=radio_audio, mics=mics, use_correction_gains=use_correction_gains)
+            radio_audio = self.get_radio(mic_setup=mic_setup, window=window, la=la, radio_audio=radio_audio, mics=mics, use_correction_gains=use_correction_gains)
             l.append(radio_audio)
         if vent_level:
-            vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics, use_correction_gains=use_correction_gains)
+            vent = self.get_ventilation(mic_setup=mic_setup, window=window, level=vent_level, mics=mics, use_correction_gains=use_correction_gains)
             l.append(vent)
-        n = self.get_noise(mic_setup=mic_setup, condition=condition, mics=mics, use_correction_gains=use_correction_gains)
+        n = self.get_noise(mic_setup=mic_setup, speed=speed, window=window, version=version, mics=mics, use_correction_gains=use_correction_gains)
         l.append(n)
         
         # s, a, v, n
@@ -911,8 +820,6 @@ class Car:
         Returns:
             numpy.ndarray: An array of complex steering vectors for each microphone in the array.
         """
-        # if mic_setup != 'array':
-        #     raise ValueError('Steering vectors are only available for microphone array configurations.')
         mic_angles = {
             0: np.pi,
             1: 3*np.pi/4,
@@ -924,7 +831,6 @@ class Car:
             7: -3*np.pi/4,
         }
         c = 343
-        # TODO: include gains
         theta = np.deg2rad(theta)
         result = []
         for mic in mic_angles.keys():

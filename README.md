@@ -171,10 +171,11 @@ car_path = os.path.join(dataset_path, car_names[0])
 radio_path = 'path/to/radio.wav'
 voice_path = '/path/to/voice.wav'
 
-sampling_rate = 16000 #open access data is provided at 16kHz sampling rate
+sampling_rate = 16000  # open access data is provided at 16kHz sampling rate
 my_mic_setup = 'array'
 my_location = 'd50'
-my_condition = 's50_w1_ver1'
+my_speed = 50
+my_window = 1
 my_Ls = 70
 my_La = 60
 my_mics = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -182,19 +183,18 @@ my_vent_level = 1
 my_car = Car(path=car_path, fs=sampling_rate)
 
 #%% Get noise component
-n = my_car.get_noise(mic_setup=my_mic_setup, condition=my_condition, mics=my_mics)
-
+n = my_car.get_noise(mic_setup=my_mic_setup, speed=my_speed, window=my_window, mics=my_mics)
 #%% Get speech component
 dry_voice, fs_dry_voice = librosa.load(voice_path, sr=my_car.fs, mono=True)
 s = my_car.get_speech(mic_setup=my_mic_setup, location=my_location,
-                      condition=my_condition, ls=my_Ls, dry_speech=dry_voice, mics=my_mics)
+                      window=my_window, ls=my_Ls, dry_speech=dry_voice, mics=my_mics)
 #%% Get radio component
 radio_tune, fs_radio = librosa.load(radio_path, sr=my_car.fs, mono=True)
-a = my_car.get_radio(mic_setup=my_mic_setup, condition=my_condition,
+a = my_car.get_radio(mic_setup=my_mic_setup, window=my_window,
                      la=my_La, radio_audio=radio_tune, mics=my_mics)
 
 #%% Get ventilation noise component
-v = my_car.get_ventilation(mic_setup=my_mic_setup, condition=my_condition, level=my_vent_level, mics=my_mics)
+v = my_car.get_ventilation(mic_setup=my_mic_setup, window=my_window, level=my_vent_level, mics=my_mics)
 
 #%% Match duration of components to speech duration
 [s_new, a_new, v_new, n_new] = Car.match_duration([s, a, v, n], my_car.fs)
@@ -204,9 +204,9 @@ mix = s_new + a_new + v_new + n_new
 
 
 #%% Finally, get_components can return all the above components or cominations of those, in matched duration.by providing te correspodins arguments. See Documentation for more info
-components = my_car.get_components(mic_setup=my_mic_setup, location=my_location, condition=my_condition,
+components = my_car.get_components(mic_setup=my_mic_setup, location=my_location, speed=my_speed, window=my_window,
                                    mics=my_mics, ls=my_Ls, dry_speech=dry_voice, la=my_La, radio_audio=radio_tune,
-                                   vent_level=my_vent_level)
+                                   vent_level=1)
 
 #%% export selected microphone channel as a wav file
 

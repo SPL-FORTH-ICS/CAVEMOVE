@@ -393,7 +393,7 @@ class Car:
                                 result = np.concatenate((result, cf), axis=0)
                         
                         # Cut result to match the length of reference
-                        crossfaded_mic[:, j] = result[:reference_len, :]
+                        crossfaded_mic[:, j] = result[:reference_len]
                     out.append(crossfaded_mic)
             out.insert(0, x)
             return out

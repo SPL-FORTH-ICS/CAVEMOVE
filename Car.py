@@ -540,7 +540,7 @@ class Car:
         return ventilation, fs_ventilation
 
 
-    def get_speech(self, mic_setup: str, position: str, condition: str, l_s: float, dry_speech, mics=None):
+    def get_speech(self, mic_setup: str, position: str, condition: str, l_s: float, dry_speech, mics=None, use_correction_gains=True):
         """
         Generates the convolved speech signal with the corresponding impulse response for a given microphone setup, position, and condition.
         
@@ -552,6 +552,7 @@ class Car:
             dry_speech (numpy.ndarray): The input speech signal vector.
             dry_speech_fs (int): The sampling frequency of the input speech signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
             numpy.ndarray: The processed speech signal for the specified microphones.
@@ -640,8 +641,11 @@ class Car:
             convolved_x = np.convolve(dry_speech, ir[:, mic], mode='full')
             # print('Convolved x level :', 20 * np.log10(Car.calculate_rms(convolved_x)))
             # apply correction gain
-            mic_gain = gain * self.correction_gains[str(mic)]
-            convolved_x *= mic_gain
+            if use_correction_gains:
+                mic_gain = gain * self.correction_gains[str(mic)]
+                convolved_x *= mic_gain
+            else:
+                convolved_x *= gain
             ###############
             # convolved_x_filtered = waveform_analysis.A_weight(convolved_x, ir_fs)
             ###############           
@@ -653,7 +657,7 @@ class Car:
         return result
     
 
-    def get_noise(self, mic_setup:str, condition:str, mics=None):
+    def get_noise(self, mic_setup:str, condition:str, mics=None, use_correction_gains=True):
         """
         Retrieves the in-motion noise recording for a given microphone setup, condition, and microphone index.
         
@@ -661,6 +665,7 @@ class Car:
             mic_setup (str): The microphone setup to use.
             condition (str): The specific noise condition to load ("speed condition_window condition").
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
             numpy.ndarray: The processed noise signal.
@@ -683,15 +688,16 @@ class Car:
             mics = range(noise.shape[1])
         noise = noise[:, mics] 
         # apply correction gain
-        gains = [self.correction_gains[str(mic)] for mic in mics]
-        noise = noise * np.array(gains)
+        if use_correction_gains:
+            gains = [self.correction_gains[str(mic)] for mic in mics]
+            noise = noise * np.array(gains)
         ###############
         # print('noise dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_noise)))
         ###############
         return noise
     
 
-    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None):
+    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None, correction_gains=True):
         """
         Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
         
@@ -702,6 +708,7 @@ class Car:
             radio_audio (numpy.ndarray): The input audio signal vector.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
+            correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
             numpy.ndarray: The processed audio signal for the specified microphones.
@@ -764,8 +771,11 @@ class Car:
         for mic in mics:
             convolved_radio_ir = np.convolve(radio_audio, radio_ir[:, mic], mode='full')
             # apply correction gain
-            mic_gain = gain * self.correction_gains[str(mic)]
-            convolved_radio_ir *= mic_gain
+            if correction_gains:
+                mic_gain = gain * self.correction_gains[str(mic)]
+                convolved_radio_ir *= mic_gain
+            else:
+                convolved_radio_ir *= gain
             result.append(convolved_radio_ir)
             # resample to fs
             ###############
@@ -778,7 +788,7 @@ class Car:
         return result
 
 
-    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None):
+    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None, correction_gains=True):
         """
         Retrieves and processes the ventilation recording for a given microphone setup, condition, and ventilation level.
         
@@ -787,6 +797,7 @@ class Car:
             condition (str): The specific condition to load ("speed condition_window condition").
             level (int): The ventilation level (must be 1, 2, or 3).
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
+            correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
         numpy.ndarray: The processed ventilation signal for the specified microphones.
@@ -818,8 +829,9 @@ class Car:
             mics = range(ventilation.shape[1])
         ventilation = ventilation[:, mics]
         # apply correction gain
-        gains = [self.correction_gains[str(mic)] for mic in mics]
-        ventilation = ventilation * np.array(gains)
+        if correction_gains:
+            gains = [self.correction_gains[str(mic)] for mic in mics]
+            ventilation = ventilation * np.array(gains)
         ###############
         # print('ventilation dB_fs_a:', 20 * np.log10(Car.calculate_rms(filtered_ventilation)))
         ###############

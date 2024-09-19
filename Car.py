@@ -240,7 +240,7 @@ class Car:
     
     @property
     def correction_gains(self):
-        """Returns a dictionary of correction gains."""
+        """Returns a dictionary with the correction gain of every microphone."""
         return self.__correction_gains
     
     @correction_gains.setter
@@ -697,7 +697,7 @@ class Car:
         return noise
     
 
-    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None, correction_gains=True):
+    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None, use_correction_gains=True):
         """
         Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
         
@@ -708,7 +708,7 @@ class Car:
             radio_audio (numpy.ndarray): The input audio signal vector.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
             numpy.ndarray: The processed audio signal for the specified microphones.
@@ -771,7 +771,7 @@ class Car:
         for mic in mics:
             convolved_radio_ir = np.convolve(radio_audio, radio_ir[:, mic], mode='full')
             # apply correction gain
-            if correction_gains:
+            if use_correction_gains:
                 mic_gain = gain * self.correction_gains[str(mic)]
                 convolved_radio_ir *= mic_gain
             else:
@@ -788,7 +788,7 @@ class Car:
         return result
 
 
-    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None, correction_gains=True):
+    def get_ventilation(self, mic_setup: str, condition: str, level: int, mics=None, use_correction_gains=True):
         """
         Retrieves and processes the ventilation recording for a given microphone setup, condition, and ventilation level.
         
@@ -797,7 +797,7 @@ class Car:
             condition (str): The specific condition to load ("speed condition_window condition").
             level (int): The ventilation level (must be 1, 2, or 3).
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
         numpy.ndarray: The processed ventilation signal for the specified microphones.
@@ -829,7 +829,7 @@ class Car:
             mics = range(ventilation.shape[1])
         ventilation = ventilation[:, mics]
         # apply correction gain
-        if correction_gains:
+        if use_correction_gains:
             gains = [self.correction_gains[str(mic)] for mic in mics]
             ventilation = ventilation * np.array(gains)
         ###############
@@ -838,7 +838,7 @@ class Car:
         return ventilation  
     
 
-    def get_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None):
+    def get_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -854,6 +854,7 @@ class Car:
             l_a (float, optional): The reference audio level. Defaults to None.
             radio_audio (numpy.ndarray, optional): The input audio signal vector.
             vent_level (float, optional): The ventilation level. Defaults to None.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
         Returns:
             list: A list of NumPy arrays representing the components of the mixture. Order: noise, speech (optional), radio(optional), ventilation(optional).
@@ -872,7 +873,7 @@ class Car:
             # make mono
             # if dry_speech.ndim > 1:
                 # dry_speech = np.mean(dry_speech,axis=1)
-            sp = self.get_speech(mic_setup=mic_setup, position=position, condition=condition, l_s=l_s, dry_speech=dry_speech, mics=mics)
+            sp = self.get_speech(mic_setup=mic_setup, position=position, condition=condition, l_s=l_s, dry_speech=dry_speech, mics=mics, use_correction_gains=use_correction_gains)
             l.append(sp)
         if l_a:
             if radio_audio is None:
@@ -881,12 +882,12 @@ class Car:
             # make mono
             # if radio_audio.ndim > 1:
                 # radio_audio = np.mean(radio_audio,axis=1)
-            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, l_a=l_a, radio_audio=radio_audio, mics=mics)
+            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, l_a=l_a, radio_audio=radio_audio, mics=mics, use_correction_gains=use_correction_gains)
             l.append(radio_audio)
         if vent_level:
-            vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics)
+            vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics, use_correction_gains=use_correction_gains)
             l.append(vent)
-        n = self.get_noise(mic_setup=mic_setup, condition=condition, mics=mics)
+        n = self.get_noise(mic_setup=mic_setup, condition=condition, mics=mics, use_correction_gains=use_correction_gains)
         l.append(n)
         
         # s, a, v, n

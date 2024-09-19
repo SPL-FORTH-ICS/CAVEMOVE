@@ -592,7 +592,7 @@ class Car:
         return result
     
 
-    def get_noise(self, mic_setup:str, speed:int, window:int, version:int=None, mics=None, use_correction_gains=True):
+    def get_noise(self, mic_setup:str, speed:int, window:int, version:str=None, mics=None, use_correction_gains=True):
         """
         Retrieves the in-motion noise recording for a given microphone setup, condition, and microphone index.
         
@@ -600,7 +600,7 @@ class Car:
             mic_setup (str): The microphone setup to use.
             speed (int): The speed condition.
             window (int): The window condition.
-            version (int, optional): The version of the noise recording in case there are multiple versions. Defaults to None.
+            version (str, optional): The version of the noise recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2", etc or "coarse". 
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
@@ -619,7 +619,7 @@ class Car:
             raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
         condition = f's{speed}_w{window}'
         if version:
-            condition += f'_ver{version}'
+            condition += f'_{version}'
         noise, fs_noise = self.load_noise(mic_setup, condition)
 
         if not isinstance(mics, list):
@@ -753,7 +753,7 @@ class Car:
         return ventilation  
     
 
-    def get_components(self, mic_setup, location, speed:int, window:int, version=None, mics=None, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
+    def get_components(self, mic_setup, location, speed:int, window:int, version:str=None, mics=None, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -764,7 +764,7 @@ class Car:
             location (str): The location of the speaker.
             speed (int): The speed condition.
             window (int): The window condition.
-            version (int, optional): The version of the noise recording in case there are multiple versions. Defaults to None.
+            version (str, optional): The version of the noise recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2", etc or "coarse". 
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             ls (float, optional): The speech effort level. Defaults to None.
             dry_speech (numpy.ndarray, optional): The input speech signal vector.

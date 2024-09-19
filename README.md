@@ -163,6 +163,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 from Car import Car
 import os
 import librosa
+import soundfile as sf
 
 dataset_path = 'path/to/cavemove/dataset'
 car_names = ['Volkswagen_Golf', 'AlfaRomeo_146', 'Smart_forfour']
@@ -170,48 +171,46 @@ car_path = os.path.join(dataset_path, car_names[0])
 radio_path = 'path/to/radio.wav'
 voice_path = '/path/to/voice.wav'
 
-my_car = Car(path=car_path)
-
+sampling_rate = 16000 #open access data is provided at 16kHz sampling rate
 my_mic_setup = 'array'
-my_position = 'd50'
+my_location = 'd50'
 my_condition = 's50_w1_ver1'
-my_l_s = 70
-my_l_a = 60
+my_Ls = 70
+my_La = 60
 my_mics = [0, 1, 2, 3, 4, 5, 6, 7]
 my_vent_level = 1
+my_car = Car(path=car_path, fs=sampling_rate)
 
-my_car = Car(path=car_path)
+#%% Get noise component
+n = my_car.get_noise(mic_setup=my_mic_setup, condition=my_condition, mics=my_mics)
 
-# Get noise component
-n = my_car.get_noise(mic_setup=my_mic_setup,
-                     condition=my_condition, mics=my_mics)
-
-# Get speech component
-dry_voice, fs_dry_voice = librosa.load(voice_path, sr=my_car.fs)
-s = my_car.get_speech(mic_setup=my_mic_setup, position=my_position,
-                      condition=my_condition, l_s=my_l_s, dry_speech=dry_voice, mics=my_mics)
-
-# Get radio component
-radio_tune, fs_radio = librosa.load(radio_path, sr=my_car.fs)
+#%% Get speech component
+dry_voice, fs_dry_voice = librosa.load(voice_path, sr=my_car.fs, mono=True)
+s = my_car.get_speech(mic_setup=my_mic_setup, location=my_location,
+                      condition=my_condition, ls=my_Ls, dry_speech=dry_voice, mics=my_mics)
+#%% Get radio component
+radio_tune, fs_radio = librosa.load(radio_path, sr=my_car.fs, mono=True)
 a = my_car.get_radio(mic_setup=my_mic_setup, condition=my_condition,
-                     l_a=my_l_a, radio_audio=radio_tune, mics=my_mics)
+                     la=my_La, radio_audio=radio_tune, mics=my_mics)
 
-# Get ventilation component
-v = my_car.get_ventilation(
-                           mic_setup=my_mic_setup, condition=my_condition, level=my_vent_level, mics=my_mics)
+#%% Get ventilation noise component
+v = my_car.get_ventilation(mic_setup=my_mic_setup, condition=my_condition, level=my_vent_level, mics=my_mics)
 
-# Match duration of components to speech duration
+#%% Match duration of components to speech duration
 [s_new, a_new, v_new, n_new] = Car.match_duration([s, a, v, n], my_car.fs)
 
-# Mix
+#%%  add components to produce a mix
 mix = s_new + a_new + v_new + n_new
 
 
-# Finally, get_components can return all the above components or cominations of those, in matched duration.by providing te correspodins arguments. See Documentation for more info
-components = my_car.get_components(mic_setup=my_mic_setup, position=my_position, condition=my_condition,
-                                   mics=my_mics, l_s=my_l_s, dry_speech=dry_voice, l_a=my_l_a, radio_audio=radio_tune,
-                                   vent_level=1)
+#%% Finally, get_components can return all the above components or cominations of those, in matched duration.by providing te correspodins arguments. See Documentation for more info
+components = my_car.get_components(mic_setup=my_mic_setup, location=my_location, condition=my_condition,
+                                   mics=my_mics, ls=my_Ls, dry_speech=dry_voice, la=my_La, radio_audio=radio_tune,
+                                   vent_level=my_vent_level)
 
+#%% export selected microphone channel as a wav file
+
+sf.write('mix.wav', mix[:,0], my_car.fs)
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._

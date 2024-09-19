@@ -469,7 +469,7 @@ class Car:
         
         Args:
             mic_setup (str): The microphone setup to load the IR for.
-            condition (str): The specific IR condition to load ("speaker position_window condition").
+            condition (str): The specific IR condition to load ("speaker location_window condition").
         
         Returns:
             tuple: A tuple containing the IR data as a NumPy array (N_samples x M_channels) and the sampling frequency of IR.
@@ -540,15 +540,15 @@ class Car:
         return ventilation, fs_ventilation
 
 
-    def get_speech(self, mic_setup: str, position: str, condition: str, l_s: float, dry_speech, mics=None, use_correction_gains=True):
+    def get_speech(self, mic_setup: str, location: str, condition: str, ls: float, dry_speech, mics=None, use_correction_gains=True):
         """
-        Generates the convolved speech signal with the corresponding impulse response for a given microphone setup, position, and condition.
+        Generates the convolved speech signal with the corresponding impulse response for a given microphone setup, location, and condition.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            position (str): The position of the speaker.
-            condition (str): The condition of the recording ("speaker position_window condition").
-            l_s (float): The speech effort level.
+            location (str): The location of the speaker.
+            condition (str): The condition of the recording ("speaker location_window condition").
+            ls (float): The speech effort level.
             dry_speech (numpy.ndarray): The input speech signal vector.
             dry_speech_fs (int): The sampling frequency of the input speech signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
@@ -559,23 +559,23 @@ class Car:
         
         Raises:
             ValueError: If the microphone setup is not available.
-            ValueError: If the position is not available.
+            ValueError: If the location is not available.
             ValueError: If the speech effort is negative.
             ValueError: If the window condition is invalid.
             ValueError: If the microphone index is not an integer or a list of integers.
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
-        if position not in self.speaker_locations[mic_setup]:
-            raise ValueError(f"Position {position} is not available.")
-        if l_s < 0:
+        if location not in self.speaker_locations[mic_setup]:
+            raise ValueError(f"location {location} is not available.")
+        if ls < 0:
             raise ValueError(f"Speech effort must be positive.")
         w_condition = int(condition.split('_')[0][-1])
         if w_condition not in [0, 1, 2, 3]:
             raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        ir_condition = f'{position}_w{w_condition}'
+        ir_condition = f'{location}_w{w_condition}'
         ir, ir_fs = self.load_ir(mic_setup, ir_condition)
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
         # print('ir_reference_level : ', 20 * np.log10(Car.calculate_rms(ir_reference)))
@@ -625,7 +625,7 @@ class Car:
         # convolved_x_rms = vad_mean_rms(convolved_x_a_filtered[:, 0], fs=fs)
         # print('vad:', convolved_x_rms)
         #####################
-        reference = self.__references[mic_setup][ir_condition] + (l_s - 72.5)
+        reference = self.__references[mic_setup][ir_condition] + (ls - 72.5)
         # Calculate correction factor
         correction_factor = reference - convolved_reference_ir_level
         gain = 10 ** (correction_factor / 20)
@@ -697,14 +697,14 @@ class Car:
         return noise
     
 
-    def get_radio(self, mic_setup: str, condition: str, l_a: float, radio_audio, mics=None, use_correction_gains=True):
+    def get_radio(self, mic_setup: str, condition: str, la: float, radio_audio, mics=None, use_correction_gains=True):
         """
         Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
             condition (str): The specific condition to load ("speed condition_window condition").
-            l_a (float): The radio audio level.
+            la (float): The radio audio level.
             radio_audio (numpy.ndarray): The input audio signal vector.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
@@ -721,7 +721,7 @@ class Car:
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
-        if l_a < 0:
+        if la < 0:
             raise ValueError(f"Audio level must be positive.")
         w_condition = int(condition.split('_')[0][-1])
         if w_condition not in [0, 1, 2, 3]:
@@ -761,7 +761,7 @@ class Car:
         convolved_radio_ir_level = 20 * np.log10(convolved_radio_ir_rms)
         level = convolved_radio_ir_level + db_fsa_to_db_a[self.__reference_mic[mic_setup]] 
         # Calculate correction factor
-        correction_factor = l_a - level
+        correction_factor = la - level
         gain = 10 ** (correction_factor / 20)
         if not isinstance(mics, list):
             mics = [mics]
@@ -838,7 +838,7 @@ class Car:
         return ventilation  
     
 
-    def get_components(self, mic_setup, position, condition, mics, l_s=None, dry_speech=None, l_a=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
+    def get_components(self, mic_setup, location, condition, mics, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
         """
         A wrapper function of the get_noise, get_speech, get_radio, and get_ventilation methods.
         Returns a list of components of the mixture in the following order: noise, speech, radio, ventilation.
@@ -846,12 +846,12 @@ class Car:
         
         Args:
             mic_setup (str): The microphone setup to use.
-            position (str): The position of the speaker.
+            location (str): The location of the speaker.
             condition (str): The condition of the recording ("speed condition_window condition").
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
-            l_s (float, optional): The speech effort level. Defaults to None.
+            ls (float, optional): The speech effort level. Defaults to None.
             dry_speech (numpy.ndarray, optional): The input speech signal vector.
-            l_a (float, optional): The reference audio level. Defaults to None.
+            la (float, optional): The reference audio level. Defaults to None.
             radio_audio (numpy.ndarray, optional): The input audio signal vector.
             vent_level (float, optional): The ventilation level. Defaults to None.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
@@ -860,29 +860,29 @@ class Car:
             list: A list of NumPy arrays representing the components of the mixture. Order: noise, speech (optional), radio(optional), ventilation(optional).
         
         Raises:
-            ValueError: If the microphone setup, position, or condition is not available.
+            ValueError: If the microphone setup, location, or condition is not available.
             ValueError: If the speech effort or audio level is negative.
             ValueError: If dry speech  or dry speech sampling frequency is not provided when speech effort level is specified.
             ValueError: If radio audio or radio audio sampling frequency is not provided when reference audio level is specified.
         """
         l = []
-        if l_s:
+        if ls:
             if dry_speech is None:
-                raise ValueError("Dry speech must be provided if l_s is provided.")
+                raise ValueError("Dry speech must be provided if ls is provided.")
             # voice, fs_voice = sf.read(voice_path)
             # make mono
             # if dry_speech.ndim > 1:
                 # dry_speech = np.mean(dry_speech,axis=1)
-            sp = self.get_speech(mic_setup=mic_setup, position=position, condition=condition, l_s=l_s, dry_speech=dry_speech, mics=mics, use_correction_gains=use_correction_gains)
+            sp = self.get_speech(mic_setup=mic_setup, location=location, condition=condition, ls=ls, dry_speech=dry_speech, mics=mics, use_correction_gains=use_correction_gains)
             l.append(sp)
-        if l_a:
+        if la:
             if radio_audio is None:
-                raise ValueError("Radio audio must be provided if l_a is provided.")
+                raise ValueError("Radio audio must be provided if la is provided.")
             # radio_audio, a_fs = sf.read(radio_path)
             # make mono
             # if radio_audio.ndim > 1:
                 # radio_audio = np.mean(radio_audio,axis=1)
-            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, l_a=l_a, radio_audio=radio_audio, mics=mics, use_correction_gains=use_correction_gains)
+            radio_audio = self.get_radio(mic_setup=mic_setup, condition=condition, la=la, radio_audio=radio_audio, mics=mics, use_correction_gains=use_correction_gains)
             l.append(radio_audio)
         if vent_level:
             vent = self.get_ventilation(mic_setup=mic_setup, condition=condition, level=vent_level, mics=mics, use_correction_gains=use_correction_gains)

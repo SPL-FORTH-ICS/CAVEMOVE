@@ -266,7 +266,7 @@ Made with [contrib.rocks](https://contrib.rocks).
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See [LICENSE](https://github.com/SPL-FORTH-ICS/CAVEMOVE?tab=MIT-1-ov-file#readme) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/LICENSE) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

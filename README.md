@@ -42,7 +42,7 @@
     <br /> -->
     Acoustic data collection for speech enabled technologies in moving vehicles.
     <br />
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md">Documentation</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md">Documentation</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb">View Demo</a>
     ·
@@ -213,13 +213,13 @@ components = my_car.get_components(mic_setup=my_mic_setup, location=my_location,
 sf.write('mix.wav', mix[:,0], my_car.fs)
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._
+_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DOCUMENTATION -->
 ## Documentation
-For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/documentation.md) file.
+For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md) file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- ROADMAP -->

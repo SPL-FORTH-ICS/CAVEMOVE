@@ -5,8 +5,7 @@ import librosa
 import json
 import soundfile as sf
 import numpy as np
-import waveform_analysis
-
+from scipy.signal import bilinear, lfilter
 
 class Car:
     """
@@ -14,8 +13,8 @@ class Car:
     The class provides methods to load and process the recordings.
 
     Args:
-    path (str): The path to the car recordings.
-    fs (int): The sampling frequency of the recordings. Defaults to 16000.
+    path (str): The path to the folder with the recordings for the particular car.
+    fs (int): The sampling frequency of the recordings. Default is 16000 Hz.
     json_info (bool): A boolean indicating whether the car information is stored in a json file inside path. Defaults to True.
     info_dict (dict): A dictionary containing the car information. Defaults to None. Is *json_info* is True, *info_dict* is ignored.
     """
@@ -169,7 +168,7 @@ class Car:
     
     @property
     def radio_irs(self):
-        """Returns a dictionary of available radio IR conditions per microphone configuration."""
+        """Returns a dictionary of available car audio IR conditions per microphone configuration."""
         return self.__radio_irs
     
     @radio_irs.setter
@@ -219,7 +218,7 @@ class Car:
     
     @property
     def correction_gains(self):
-        """Returns a dictionary with the correction gain of every microphone."""
+        """Returns a dictionary with the correction gains of all microphones."""
         return self.__correction_gains
     
     @correction_gains.setter
@@ -249,20 +248,45 @@ class Car:
             print(f"No folders found with {condition} in their names.")
             return None
         
+    def __A_weighting_filter(self, s, fs):
+        """Design of an A-weighting filter.
+        b, a = A_weighting(fs) designs a digital A-weighting filter for sampling frequency `fs`. Usage: y = scipy.signal.lfilter(b, a, x).
+        Warning: `fs` should normally be higher than 20 kHz. For example,
+        fs = 48000 yields a class 1-compliant filter.
+        References:
+        [1] IEC/CD 1672: Electroacoustics-Sound Level Meters, Nov. 1996.
+        """
+        # Definition of analog A-weighting filter according to IEC/CD 1672.
+        f1 = 20.598997
+        f2 = 107.65265
+        f3 = 737.86223
+        f4 = 12194.217
+        A1000 = 1.9997
+
+        NUMs = [(2*np.pi * f4)**2 * (10**(A1000/20)), 0, 0, 0, 0]
+        DENs = np.polymul([1, 4*np.pi * f4, (2*np.pi * f4)**2],
+                    [1, 4*np.pi * f1, (2*np.pi * f1)**2])
+        DENs = np.polymul(np.polymul(DENs, [1, 2*np.pi * f3]),
+                                    [1, 2*np.pi * f2])
+
+        b, a = bilinear(NUMs, DENs, fs)
+           
+        return lfilter(b, a, s)
+        
     @classmethod
     def __calculate_rms(cls, x):
         """
-        Calculates the root mean square (RMS) mean of the given array.
+        Calculates the root mean square (RMS) of the given array.
 
-        This method computes the RMS mean of the input array `x`. The RMS mean is 
+        This method computes the RMS  of the input array `x`. The RMS  is 
         calculated as the square root of the mean of the squares of the elements 
         in `x`.
 
         Args:
-            x (numpy.ndarray): A numpy array for which the RMS mean is to be calculated.
+            x (numpy.ndarray): A numpy array for which the RMS is to be calculated.
 
         Returns:
-            float: The RMS mean of the input array.
+            float: The RMS of the input array.
         """
         return np.sqrt(np.sum(np.square(x))/len(x))
         
@@ -382,7 +406,7 @@ class Car:
     # instance methods
     def speaker_locations_angles(self, mic_setup):
         """
-        Returns the speaker locations and their corresponding angles for microphone array configurations.
+        Returns the speaker locations and their corresponding angles with respect to the center of the microphone array.
         
         Args:
             mic_setup (str): The microphone setup to use.
@@ -532,7 +556,6 @@ class Car:
             window (int): The window condition.
             ls (float): The speech effort level.
             dry_speech (numpy.ndarray): The input speech signal vector.
-            dry_speech_fs (int): The sampling frequency of the input speech signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
@@ -544,7 +567,7 @@ class Car:
             ValueError: If the location is not available.
             ValueError: If the speech effort is negative.
             ValueError: If the window condition is invalid.
-            ValueError: If the microphone index is not an integer or a list of integers.
+            ValueError: If mics is not an integer or a list of integers.
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
@@ -557,18 +580,18 @@ class Car:
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
         ir_condition = f'{location}_w{window}'
-        ir, ir_fs = self.load_ir(mic_setup, ir_condition)
+        ir, _ = self.load_ir(mic_setup, ir_condition) #check if ir_fs = car.fs!
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
-        convolved_reference_ir = np.convolve(dry_speech, ir_reference, mode='full')
-        convolved_reference_ir= waveform_analysis.A_weight(convolved_reference_ir, ir_fs)
-        # Calculate RMS mean
-        convolved_reference_ir_rms = Car.__calculate_rms(convolved_reference_ir)
+        convolved_reference_signal = np.convolve(dry_speech, ir_reference, mode='full')
+        convolved_reference_signal = self.__A_weighting_filter(convolved_reference_signal, self.fs)
+        # Calculate RMS
+        convolved_reference_rms = Car.__calculate_rms(convolved_reference_signal)
         # to dB
-        convolved_reference_ir_level = 20 * np.log10(convolved_reference_ir_rms)
+        convolved_reference_level = 20 * np.log10(convolved_reference_rms)
 
         reference = self.__references[mic_setup][ir_condition] + (ls - 72.5)
         # Calculate correction factor
-        correction_factor = reference - convolved_reference_ir_level
+        correction_factor = reference - convolved_reference_level
         gain = 10 ** (correction_factor / 20)
 
         if not isinstance(mics, list):
@@ -609,7 +632,7 @@ class Car:
         
         Raises:
             ValueError: If the specified microphone setup is not available.
-            ValueError: If the microphone index is not an integer or a list of integers.
+            ValueError: If mics is not an integer or a list of integers.
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
@@ -620,7 +643,7 @@ class Car:
         condition = f's{speed}_w{window}'
         if version:
             condition += f'_{version}'
-        noise, fs_noise = self.load_noise(mic_setup, condition)
+        noise, _ = self.load_noise(mic_setup, condition)
 
         if not isinstance(mics, list):
             mics = [mics]
@@ -637,13 +660,13 @@ class Car:
 
     def get_radio(self, mic_setup: str, window:int, la: float, radio_audio, mics=None, use_correction_gains=True):
         """
-        Generates the convolved audio signal with the corresponding radio impulse response for a given microphone setup, condition, and microphone index.
+        Generates the radio (car-audio) signal by exploiting the measured  impulse response for a given microphone setup, condition, and microphone index.
         
         Args:
             mic_setup (str): The microphone setup to use.
             window (int): The window condition.
             la (float): The radio audio level.
-            radio_audio (numpy.ndarray): The input audio signal vector.
+            radio_audio (numpy.ndarray): The input audio signal, provided by the user.
             radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
@@ -655,7 +678,7 @@ class Car:
             ValueError: If the microphone setup is not available.
             ValueError: If the audio level is negative.
             ValueError: If the window condition is invalid.
-            ValueError: If the microphone index is not an integer or a list of integers.
+            ValueError: If mics is not an integer or a list of integers.
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
@@ -678,17 +701,17 @@ class Car:
             }
              
         radio_ir_condition = f'w{window}'
-        radio_ir, radio_ir_fs = self.load_radio_ir(mic_setup, radio_ir_condition)
+        radio_ir, _ = self.load_radio_ir(mic_setup, radio_ir_condition)
         radio_ir_reference = radio_ir[:, self.__reference_mic[mic_setup]]
 
-        convolved_radio_reference_ir = np.convolve(radio_audio, radio_ir_reference, mode='full')
+        convolved_radio_reference_signal = np.convolve(radio_audio, radio_ir_reference, mode='full')
         # Apply A-weighting filter
-        convolved_radio_reference_ir= waveform_analysis.A_weight(convolved_radio_reference_ir, radio_ir_fs)
-        # Calculate RMS mean
-        convolved_radio_ir_rms = Car.__calculate_rms(convolved_radio_reference_ir)
+        convolved_radio_reference_signal = self.__A_weighting_filter(convolved_radio_reference_signal, self.fs)
+        # Calculate RMS
+        convolved_radio_rms = Car.__calculate_rms(convolved_radio_reference_signal)
         # to dB
-        convolved_radio_ir_level = 20 * np.log10(convolved_radio_ir_rms)
-        level = convolved_radio_ir_level + db_fsa_to_db_a[self.__reference_mic[mic_setup]] 
+        convolved_radio_level = 20 * np.log10(convolved_radio_rms)
+        level = convolved_radio_level + db_fsa_to_db_a[self.__reference_mic[mic_setup]] 
         # Calculate correction factor
         correction_factor = la - level
         gain = 10 ** (correction_factor / 20)
@@ -728,7 +751,7 @@ class Car:
             ValueError: If the microphone setup is not available.
             ValueError: If the ventilation level is not 1, 2, or 3.
             ValueError: If the window condition is invalid.
-            ValueError: If the microphone index is not an integer or a list of integers.
+            ValueError: If mics is not an integer or a list of integers.
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
@@ -739,7 +762,7 @@ class Car:
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
         ventilation_condition = f'v{level}_w{window}'
-        ventilation, ventilation_fs = self.load_ventilation(mic_setup, ventilation_condition)
+        ventilation, _ = self.load_ventilation(mic_setup, ventilation_condition)
         # resample to fs
         if not isinstance(mics, list):
             mics = [mics]
@@ -810,7 +833,7 @@ class Car:
     def construct_steering_vector(self, freq, theta):
         """
         Calculates the steering vectors for a given frequency and angle for a microphone array configuration.
-        The center of the microphone array is the acoustic center. 0 degrees point towards the rear middle passenger,
+        The acoustic center is defined as the center of the microphone array. 0 degrees point towards the rear middle passenger,
         so that the driver is positioned at a negative angle and the front passenger at a positive angle.
         
         Args:

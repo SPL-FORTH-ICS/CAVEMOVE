@@ -528,13 +528,16 @@ This method adjusts the duration of each element in the list `n` to match the du
 
 **Notes:**
 
-> - If the list `n` contains only one element, it is returned as is. - Crossfading is used to loop shorter elements. The crossfade duration is set to 1 second. - The crossfade is achieved using the first quarter of sine and cosine functions. 
->
+> - If the list `n` contains only one element, it is returned as is.
+> - Crossfading is used to loop shorter elements. The crossfade duration is set to 1 second.
+> - The crossfade is achieved using the first quarter of sine and cosine functions. 
 
 **Example:**
- ``` signals = [np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3])]```
-    >>> fs = 44100
-    >>> matched_signals = Car.match_duration(signals, fs)
+``` 
+signals = [np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3])]
+fs = 16000
+matched_signals = Car.match_duration(signals, fs)
+```
 
 
 ---

@@ -95,9 +95,9 @@ CAVEMOVE API is currently available in python, and relies only on basic python s
 -To produce the car-audio components, users must provide their own audio signals.
 
 For any questions with respect to CAVEMOVE dataset or API, feel free to send an email to 
-Andreas Symiakakis at  andrysmi@ics.forth.gr 
+Andreas Symiakakis at  andrysmi [at] ics.forth.gr 
 or
-Nikos Stefanakis at nstefana@ics.forth.gr
+Nikos Stefanakis at nstefana [at] ics.forth.gr
 
 CAVEMOVE project is funded by the Institute of Computer Science of the Foundation for Research and Technology-Hellas (FORTH).
 

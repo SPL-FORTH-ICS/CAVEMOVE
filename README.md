@@ -208,7 +208,6 @@ components = my_car.get_components(mic_setup=my_mic_setup, location=my_location,
                                    la=my_La, radio_audio=radio_tune, vent_level=1)
 
 #%% export selected microphone channel as a wav file
-
 sf.write('mix.wav', mix[:,0], my_car.fs)
 ```
 

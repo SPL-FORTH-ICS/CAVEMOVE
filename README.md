@@ -90,9 +90,9 @@ This document explains the Application Programming Interface (API) that was desi
 CAVEMOVE API is currently available in python, and relies only on basic python sound processing packages (librosa, numpy, scipy) and natsort. A Matlab version will soon follow. Some basic principles followed in CAVEMOVE are the following. 
 - We provide functions for retrieving speech and noise components as separate python entities (numpy arrays). Users must manually add the speech and noise components to derive a mixture.
 - Noise recordings are derived as a function of driving conditions, mainly the speed (in km/hour) and the window aperture (3 or 4 different windows conditions are considered in each vehicle)
--Apart from the basic noise components, we also provide means for adding ventilation/air-condition noise and also, interference from the built-in car audio system (e.g. radio, cd player etc)
--To produce the speech components, users must provide their own dry speech recordings 
--To produce the car-audio components, users must provide their own audio signals.
+- Apart from the basic noise components, we also provide means for adding ventilation/air-condition noise and also, interference from the built-in car audio system (e.g. radio, cd player etc)
+- To produce the speech components, users must provide their own dry speech recordings 
+- To produce the car-audio components, users must provide their own audio signals.
 
 For any questions with respect to CAVEMOVE dataset or API, feel free to send an email to 
 Andreas Symiakakis at  andrysmi [at] ics.forth.gr 

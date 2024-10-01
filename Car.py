@@ -584,11 +584,18 @@ class Car:
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
         convolved_reference_signal = np.convolve(dry_speech, ir_reference, mode='full')
         convolved_reference_signal = self.__A_weighting_filter(convolved_reference_signal, self.fs)
+        #################
+        # NO VAD
         # Calculate RMS
         convolved_reference_rms = Car.__calculate_rms(convolved_reference_signal)
         # to dB
         convolved_reference_level = 20 * np.log10(convolved_reference_rms)
-
+        print('no vad:', convolved_reference_level)
+        #################
+        # VAD
+        convolved_reference_level = vad_mean_rms(convolved_reference_signal, self.fs, srhThreshold = 0.1)
+        print('vad:', convolved_reference_level)
+        #################
         reference = self.__references[mic_setup][ir_condition] + (ls - 72.5)
         # Calculate correction factor
         correction_factor = reference - convolved_reference_level

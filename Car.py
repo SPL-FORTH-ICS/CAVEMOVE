@@ -1,5 +1,5 @@
 from natsort import natsort_keygen
-# from source.vad import vad_mean_rms
+from source.vad import vad_mean_rms
 import os
 import librosa
 import json

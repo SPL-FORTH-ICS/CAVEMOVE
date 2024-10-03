@@ -593,7 +593,7 @@ class Car:
         print('no vad:', convolved_reference_level)
         #################
         # VAD
-        convolved_reference_level = vad_mean_rms(convolved_reference_signal, self.fs, srhThreshold = 0.1)
+        convolved_reference_level = vad_mean_rms(convolved_reference_signal, self.fs, srhThreshold = 0.09)
         print('vad:', convolved_reference_level)
         #################
         reference = self.__references[mic_setup][ir_condition] + (ls - 72.5)

@@ -578,6 +578,9 @@ class Car:
             raise ValueError(f"Window condition in condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
+        # dry speech to mono
+        if len(dry_speech.shape) > 1:
+            dry_speech = np.mean(dry_speech, axis=1)
         ir_condition = f'{location}_w{window}'
         ir, _ = self.load_ir(mic_setup, ir_condition) #check if ir_fs = car.fs!
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
@@ -687,7 +690,9 @@ class Car:
             raise ValueError(f"Window condition must be 0, 1, 2 or 3.")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
-        
+        # radio audio to mono
+        if len(radio_audio.shape) > 1:
+            radio_audio = np.mean(radio_audio, axis=1)
         db_fsa_to_db_a = {
             0: 124.8755,
             1: 124.8381,

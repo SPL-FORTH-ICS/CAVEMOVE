@@ -262,7 +262,6 @@ Generates the radio (car-audio) signal by exploiting the measured  impulse respo
  - <b>`window`</b> (int):  The window condition. 
  - <b>`la`</b> (float):  The radio audio level. 
  - <b>`radio_audio`</b> (numpy.ndarray):  The input audio signal, provided by the user. 
- - <b>`radio_audio_fs`</b> (int):  The sampling frequency of the input audio signal. 
  - <b>`mics`</b> (int or list of int, optional):  The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used. 
  - <b>`use_correction_gains`</b> (bool, optional):  A boolean indicating whether to use the correction gains. Defaults to True. 
 

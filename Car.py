@@ -669,7 +669,6 @@ class Car:
             window (int): The window condition.
             la (float): The radio audio level.
             radio_audio (numpy.ndarray): The input audio signal, provided by the user.
-            radio_audio_fs (int): The sampling frequency of the input audio signal.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         

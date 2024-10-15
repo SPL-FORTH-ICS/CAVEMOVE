@@ -44,7 +44,7 @@
     <br />
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md">API Documentation</a>
     ·
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.md">Dataset Documentation</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.pdf">Dataset Documentation</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb">View Demo</a>
     ·
@@ -219,7 +219,7 @@ _For more examples, please refer to the [Documentation](https://github.com/SPL-F
 
 <!-- DOCUMENTATION -->
 ## Documentation
-For extensive documentation for the API refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md) file. As described in the <a href="#about-the-project">About The Project</a> section, this API accompanies a specific dataset. Please refer to the <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.md">Dataset Documentation</a> file for information regarding naming conventions etc.
+For extensive documentation for the API refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md) file. As described in the <a href="#about-the-project">About The Project</a> section, this API accompanies a specific dataset. Please refer to the <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.pdf">Dataset Documentation</a> file for information regarding naming conventions etc.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

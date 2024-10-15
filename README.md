@@ -42,7 +42,9 @@
     <br /> -->
     Acoustic data collection for speech enabled technologies in moving vehicles.
     <br />
-    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md">Documentation</a>
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md">API Documentation</a>
+    ·
+    <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.md">Dataset Documentation</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb">View Demo</a>
     ·
@@ -137,7 +139,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
    git clone https://github.com/SPL-FORTH-ICS/CAVEMOVE
    ```
 
-2. Download CAVEMOVE dataset from [HERE](https://zenodo.org/records/13594243) and extract folders.
+2. Download CAVEMOVE dataset from [Zenodo](https://zenodo.org/records/13594243) and extract folders.
 
 
 3. Install dependancies
@@ -217,7 +219,8 @@ _For more examples, please refer to the [Documentation](https://github.com/SPL-F
 
 <!-- DOCUMENTATION -->
 ## Documentation
-For extensive documentation refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md) file.
+For extensive documentation for the API refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md) file. As described in the <a href="#about-the-project">About The Project</a> section, this API accompanies a specific dataset. Please refer to the <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.md">Dataset Documentation</a> file for information regarding naming conventions etc.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- ROADMAP -->

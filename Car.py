@@ -225,6 +225,7 @@ class Car:
             'Honda_CR-V': {'array': 4, 'distributed': 2},
             'Smart_forfour': {'array': 4, 'distributed': 0},
             'Volkswagen_Golf': {'array': 4, 'distributed': 0},
+            'Hyundai_i30': {'array': 2, 'distributed': 0,  'hybrid': 2}
         }
         return reference_mics[self.make + '_' + self.model]
     
@@ -581,12 +582,21 @@ class Car:
         if condition not in self.radio_irs[mic_setup]:
             raise ValueError(f"Radio IR condition {condition} is not in Car.radio_irs[condition].")
         ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')
+        ##################
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'radio_IRs', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = range(4, 8)
+        ##################
         ir, fs_ir = sf.read(ir_path) 
         # resmaple
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs   
-        return ir, fs_ir
+        return ir[:, mic_range], fs_ir
     
 
     def load_ventilation(self, mic_setup: str, condition):
@@ -606,12 +616,21 @@ class Car:
         if condition not in self.ventilation_recordings[mic_setup]:
             raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[condition].")
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
+        ##################
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = range(4, 8)
+        ##################
         ventilation, fs_ventilation = sf.read(ventilation_path)
         # resample
         if fs_ventilation != self.fs:
             ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)
             fs_ventilation = self.fs
-        return ventilation, fs_ventilation
+        return ventilation[:, mic_range], fs_ventilation
 
 
     def get_speech(self, mic_setup: str, location: str, window:int, ls: float, dry_speech, mics=None, use_correction_gains=True):
@@ -651,7 +670,7 @@ class Car:
         if len(dry_speech.shape) > 1:
             dry_speech = np.mean(dry_speech, axis=1)
         ir_condition = f'{location}_w{window}'
-        ir, _ = self.load_ir(mic_setup, ir_condition) #check if ir_fs = car.fs!
+        ir, _ = self.load_ir(mic_setup, ir_condition) 
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
         convolved_reference_signal = np.convolve(dry_speech, ir_reference, mode='full')
         convolved_reference_signal = self.__A_weighting_filter(convolved_reference_signal, self.fs)

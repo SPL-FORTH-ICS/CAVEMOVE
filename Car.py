@@ -85,8 +85,8 @@ class Car:
                 ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
                 with open(ref_file, 'r') as f:
                     self.__references[mic_setup] = json.load(f)
-                    self.__references['array'] = json.load(f)
-                    self.__references['distributed'] = json.load(f)
+                self.__references['array'] = self.__references[mic_setup].copy()
+                self.__references['distributed'] = self.__references[mic_setup].copy()
 
             else:
                 # IRs
@@ -177,7 +177,7 @@ class Car:
     @property
     def mic_setups(self):
         """Returns a list of available microphone configurations."""
-        if self.__mic_setups == 'hybrid':
+        if self.__mic_setups == ['hybrid']:
             return ['array', 'distributed', 'hybrid']
         return self.__mic_setups
     
@@ -511,14 +511,23 @@ class Car:
                 raise ValueError(f"Noise condition {condition} is not available in Car.noise_recordings[mic_setup].")
             condition = new_condition
         #################
-        #################
         noise_path = os.path.join(self.__path, mic_setup, 'noise', condition + '.wav')
+        mic_range = range(8)
+        if not os.path.exists(noise_path):  # hybrid
+            noise_path = os.path.join(self.__path, 'hybrid', 'noise', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = range(4, 8)
+
+        #################
+
         noise, fs_noise = sf.read(noise_path)
         # resample
         if fs_noise != self.fs:
             noise = librosa.resample(noise, orig_sr=fs_noise, target_sr=self.fs, axis=0)
             fs_noise = self.fs
-        return noise, fs_noise
+        return noise[:, mic_range], fs_noise
     
     def load_ir(self, mic_setup: str, condition):
         """

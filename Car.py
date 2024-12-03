@@ -519,7 +519,6 @@ class Car:
                 mic_range = range(4)
             elif mic_setup == 'distributed':
                 mic_range = range(4, 8)
-
         #################
 
         noise, fs_noise = sf.read(noise_path)
@@ -546,12 +545,21 @@ class Car:
         if condition not in self.irs[mic_setup]:
             raise ValueError(f"IR condition {condition} is not in Car.irs[mic_setup].")
         ir_path = os.path.join(self.__path, mic_setup, 'IRs', condition + '.wav')
+        ##################
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'IRs', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = range(4, 8)
+        ##################
         ir, fs_ir = sf.read(ir_path)
         # resample
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs
-        return ir, fs_ir
+        return ir[:, mic_range], fs_ir
     
     def load_radio_ir(self, mic_setup: str, condition):
         """

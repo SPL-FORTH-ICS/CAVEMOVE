@@ -481,7 +481,7 @@ class Car:
                     'prm10l': -4,
                     'prm10r': 4
                     }  
-        if self.make + '_' + self.model == '/media/andreas/1TB/FORTH/my_CAVEMOVE/Recordings/official_dataset/48kHz/Hyundai_i30':
+        if self.make + '_' + self.model == 'Hyundai_i30':
             angles = {
                     'd52': -25,
                     'fp': 27,
@@ -489,6 +489,15 @@ class Car:
                     'prm': 0,
                     'prr': 13,
                     }
+        if self.make + '_' + self.model == 'Honda_CRV':
+            angles = {
+                    'd55': -26,
+                    'fp': 26,
+                    'prl': -12,
+                    'prm': 0,
+                    'prr': 12
+                    }
+
         return angles
     
 

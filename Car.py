@@ -225,7 +225,7 @@ class Car:
             'Honda_CR-V': {'array': 4, 'distributed': 2},
             'Smart_forfour': {'array': 4, 'distributed': 0},
             'Volkswagen_Golf': {'array': 4, 'distributed': 0},
-            'Hyundai_i30': {'array': 2, 'distributed': 0,  'hybrid': 2}
+            'Hyundai_i30': {'array': 2, 'distributed': 0,  'hybrid': 2} # distributed 0 is mic #2 in the topology, it is just 1st in the distributed mic list
         }
         return reference_mics[self.make + '_' + self.model]
     
@@ -511,7 +511,7 @@ class Car:
             if new_condition not in self.noise_recordings[mic_setup]:
                 raise ValueError(f"Noise condition {condition} is not available in Car.noise_recordings[mic_setup].")
             condition = new_condition
-        #################
+        
         noise_path = os.path.join(self.__path, mic_setup, 'noise', condition + '.wav')
         mic_range = range(8)
         if not os.path.exists(noise_path):  # hybrid
@@ -520,7 +520,6 @@ class Car:
                 mic_range = range(4)
             elif mic_setup == 'distributed':
                 mic_range = range(4, 8)
-        #################
 
         noise, fs_noise = sf.read(noise_path)
         # resample
@@ -546,7 +545,7 @@ class Car:
         if condition not in self.irs[mic_setup]:
             raise ValueError(f"IR condition {condition} is not in Car.irs[mic_setup].")
         ir_path = os.path.join(self.__path, mic_setup, 'IRs', condition + '.wav')
-        ##################
+        
         mic_range = range(8)
         if not os.path.exists(ir_path):  # hybrid
             ir_path = os.path.join(self.__path, 'hybrid', 'IRs', condition + '.wav')
@@ -554,7 +553,7 @@ class Car:
                 mic_range = range(4)
             elif mic_setup == 'distributed':
                 mic_range = range(4, 8)
-        ##################
+        
         ir, fs_ir = sf.read(ir_path)
         # resample
         if fs_ir != self.fs:
@@ -581,8 +580,8 @@ class Car:
             raise ValueError(f"Radio IRs not available for this car.")
         if condition not in self.radio_irs[mic_setup]:
             raise ValueError(f"Radio IR condition {condition} is not in Car.radio_irs[condition].")
-        ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')
-        ##################
+    
+        ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')    
         mic_range = range(8)
         if not os.path.exists(ir_path):  # hybrid
             ir_path = os.path.join(self.__path, 'hybrid', 'radio_IRs', condition + '.wav')
@@ -590,9 +589,9 @@ class Car:
                 mic_range = range(4)
             elif mic_setup == 'distributed':
                 mic_range = range(4, 8)
-        ##################
+        
         ir, fs_ir = sf.read(ir_path) 
-        # resmaple
+        # resample
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs   
@@ -615,17 +614,17 @@ class Car:
         """
         if condition not in self.ventilation_recordings[mic_setup]:
             raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[condition].")
+        
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
-        ##################
         mic_range = range(8)
         if not os.path.exists(ir_path):  # hybrid
             ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
             if mic_setup == 'array':
                 mic_range = range(4)
             elif mic_setup == 'distributed':
-                mic_range = range(4, 8)
-        ##################
+                mic_range = [2, 4, 5, 6, 7]
         ventilation, fs_ventilation = sf.read(ventilation_path)
+        
         # resample
         if fs_ventilation != self.fs:
             ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)

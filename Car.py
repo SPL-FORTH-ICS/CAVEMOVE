@@ -519,7 +519,7 @@ class Car:
             if mic_setup == 'array':
                 mic_range = range(4)
             elif mic_setup == 'distributed':
-                mic_range = range(4, 8)
+                mic_range = [2, 4, 5, 6, 7]
 
         noise, fs_noise = sf.read(noise_path)
         # resample
@@ -552,7 +552,7 @@ class Car:
             if mic_setup == 'array':
                 mic_range = range(4)
             elif mic_setup == 'distributed':
-                mic_range = range(4, 8)
+                mic_range = [2, 4, 5, 6, 7]
         
         ir, fs_ir = sf.read(ir_path)
         # resample
@@ -588,7 +588,7 @@ class Car:
             if mic_setup == 'array':
                 mic_range = range(4)
             elif mic_setup == 'distributed':
-                mic_range = range(4, 8)
+                mic_range = [2, 4, 5, 6, 7]
         
         ir, fs_ir = sf.read(ir_path) 
         # resample

@@ -45,29 +45,69 @@ class Car:
         natsort_key = natsort_keygen(key=lambda y: y.lower()) 
 
         for mic_setup in self.__mic_setups:
-            # IRs
-            wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'IRs'))
-            self.__irs[mic_setup] = sorted([wav[:-4] for wav in wav_list], key=natsort_key)
-
-            # Noise
-            wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'noise'))
-            self.__noises[mic_setup] = sorted([wav[:-4] for wav in wav_list], key=natsort_key)
-            
-            # Radio IRs
+            irs_list = os.listdir(os.path.join(self.__path, mic_setup, 'IRs'))
+            noise_list = os.listdir(os.path.join(self.__path, mic_setup, 'noise'))
             try:
-                wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'radio_IRs'))
-                self.__radio_irs[mic_setup] = sorted([wav[:-4] for wav in wav_list], key=natsort_key)
+                radio_irs_list = os.listdir(os.path.join(self.__path, mic_setup, 'radio_IRs'))
             except :
-                self.__radio_irs[mic_setup] = None
+                pass
+            ventilation_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
 
-            # Ventilation
-            wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
-            self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in wav_list], key=natsort_key)
+            if mic_setup == 'hybrid':
+                # IRs
+                self.__irs[mic_setup] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
+                self.__irs['array'] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
+                self.__irs['distributed'] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
 
-            # References
-            ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
-            with open(ref_file, 'r') as f:
-                self.__references[mic_setup] = json.load(f)
+                # Noise
+                self.__noises[mic_setup] = sorted([wav[:-4] for wav in noise_list], key=natsort_key)
+                self.__noises['array'] = sorted([wav[:-4] for wav in noise_list], key=natsort_key)
+                self.__noises['distributed'] = sorted([wav[:-4] for wav in noise_list], key=natsort_key)
+
+                # Radio IRs
+                try:
+                    self.__radio_irs[mic_setup] = sorted([wav[:-4] for wav in radio_irs_list], key=natsort_key)
+                    self.__radio_irs['array'] = sorted([wav[:-4] for wav in radio_irs_list], key=natsort_key)
+                    self.__radio_irs['distributed'] = sorted([wav[:-4] for wav in radio_irs_list], key=natsort_key)
+
+                except :
+                    self.__radio_irs[mic_setup] = None
+                    self.__radio_irs['array'] = None
+                    self.__radio_irs['distributed'] = None
+
+                # Ventilation
+                wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
+                self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+                self.__ventilation['array'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+                self.__ventilation['distributed'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+
+                # References
+                ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
+                with open(ref_file, 'r') as f:
+                    self.__references[mic_setup] = json.load(f)
+                self.__references['array'] = self.__references[mic_setup].copy()
+                self.__references['distributed'] = self.__references[mic_setup].copy()
+
+            else:
+                # IRs
+                self.__irs[mic_setup] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
+
+                # Noise
+                self.__noises[mic_setup] = sorted([wav[:-4] for wav in noise_list], key=natsort_key)
+                
+                # Radio IRs
+                try:
+                    self.__radio_irs[mic_setup] = sorted([wav[:-4] for wav in radio_irs_list], key=natsort_key)
+                except :
+                    self.__radio_irs[mic_setup] = None
+
+                # Ventilation
+                self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+
+                # References
+                ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
+                with open(ref_file, 'r') as f:
+                    self.__references[mic_setup] = json.load(f)
 
             # Correction gains
             gains_file = os.path.join('source', 'correction_gains', 'gains.json')
@@ -137,6 +177,8 @@ class Car:
     @property
     def mic_setups(self):
         """Returns a list of available microphone configurations."""
+        if self.__mic_setups == ['hybrid']:
+            return ['array', 'distributed', 'hybrid']
         return self.__mic_setups
     
     @mic_setups.setter
@@ -183,6 +225,7 @@ class Car:
             'Honda_CR-V': {'array': 4, 'distributed': 2},
             'Smart_forfour': {'array': 4, 'distributed': 0},
             'Volkswagen_Golf': {'array': 4, 'distributed': 0},
+            'Hyundai_i30': {'array': 2, 'distributed': 0,  'hybrid': 2} # distributed 0 is mic #2 in the topology, it is just 1st in the distributed mic list
         }
         return reference_mics[self.make + '_' + self.model]
     
@@ -437,7 +480,24 @@ class Car:
                     'prr': 13,
                     'prm10l': -4,
                     'prm10r': 4
-            }
+                    }  
+        if self.make + '_' + self.model == 'Hyundai_i30':
+            angles = {
+                    'd52': -25,
+                    'fp': 27,
+                    'prl': -13,
+                    'prm': 0,
+                    'prr': 13,
+                    }
+        if self.make + '_' + self.model == 'Honda_CRV':
+            angles = {
+                    'd55': -26,
+                    'fp': 26,
+                    'prl': -12,
+                    'prm': 0,
+                    'prr': 12
+                    }
+
         return angles
     
 
@@ -460,13 +520,22 @@ class Car:
             if new_condition not in self.noise_recordings[mic_setup]:
                 raise ValueError(f"Noise condition {condition} is not available in Car.noise_recordings[mic_setup].")
             condition = new_condition
+        
         noise_path = os.path.join(self.__path, mic_setup, 'noise', condition + '.wav')
+        mic_range = range(8)
+        if not os.path.exists(noise_path):  # hybrid
+            noise_path = os.path.join(self.__path, 'hybrid', 'noise', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = [2, 4, 5, 6, 7]
+
         noise, fs_noise = sf.read(noise_path)
         # resample
         if fs_noise != self.fs:
             noise = librosa.resample(noise, orig_sr=fs_noise, target_sr=self.fs, axis=0)
             fs_noise = self.fs
-        return noise, fs_noise
+        return noise[:, mic_range], fs_noise
     
     def load_ir(self, mic_setup: str, condition):
         """
@@ -485,12 +554,21 @@ class Car:
         if condition not in self.irs[mic_setup]:
             raise ValueError(f"IR condition {condition} is not in Car.irs[mic_setup].")
         ir_path = os.path.join(self.__path, mic_setup, 'IRs', condition + '.wav')
+        
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'IRs', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = [2, 4, 5, 6, 7]
+        
         ir, fs_ir = sf.read(ir_path)
         # resample
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs
-        return ir, fs_ir
+        return ir[:, mic_range], fs_ir
     
     def load_radio_ir(self, mic_setup: str, condition):
         """
@@ -511,13 +589,22 @@ class Car:
             raise ValueError(f"Radio IRs not available for this car.")
         if condition not in self.radio_irs[mic_setup]:
             raise ValueError(f"Radio IR condition {condition} is not in Car.radio_irs[condition].")
-        ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')
+    
+        ir_path = os.path.join(self.__path, mic_setup, 'radio_IRs', condition + '.wav')    
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'radio_IRs', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = [2, 4, 5, 6, 7]
+        
         ir, fs_ir = sf.read(ir_path) 
-        # resmaple
+        # resample
         if fs_ir != self.fs:
             ir = librosa.resample(ir, orig_sr=fs_ir, target_sr=self.fs, axis=0)
             fs_ir = self.fs   
-        return ir, fs_ir
+        return ir[:, mic_range], fs_ir
     
 
     def load_ventilation(self, mic_setup: str, condition):
@@ -536,13 +623,22 @@ class Car:
         """
         if condition not in self.ventilation_recordings[mic_setup]:
             raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[condition].")
+        
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
+        mic_range = range(8)
+        if not os.path.exists(ir_path):  # hybrid
+            ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = [2, 4, 5, 6, 7]
         ventilation, fs_ventilation = sf.read(ventilation_path)
+        
         # resample
         if fs_ventilation != self.fs:
             ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)
             fs_ventilation = self.fs
-        return ventilation, fs_ventilation
+        return ventilation[:, mic_range], fs_ventilation
 
 
     def get_speech(self, mic_setup: str, location: str, window:int, ls: float, dry_speech, mics=None, use_correction_gains=True):
@@ -582,7 +678,7 @@ class Car:
         if len(dry_speech.shape) > 1:
             dry_speech = np.mean(dry_speech, axis=1)
         ir_condition = f'{location}_w{window}'
-        ir, _ = self.load_ir(mic_setup, ir_condition) #check if ir_fs = car.fs!
+        ir, _ = self.load_ir(mic_setup, ir_condition) 
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
         convolved_reference_signal = np.convolve(dry_speech, ir_reference, mode='full')
         convolved_reference_signal = self.__A_weighting_filter(convolved_reference_signal, self.fs)

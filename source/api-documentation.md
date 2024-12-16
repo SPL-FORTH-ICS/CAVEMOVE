@@ -388,7 +388,7 @@ Loads the impulse response (IR) channels for a given microphone setup and IR con
 **Args:**
  
  - <b>`mic_setup`</b> (str):  The microphone setup to load the IR for. 
- - <b>`condition`</b> (str):  The specific IR condition to load ("speaker location_window condition"). 
+ - <b>`condition`</b> (str):  The specific IR condition to load ("'speaker location'_w'window condition'"). 
 
 
 
@@ -419,7 +419,7 @@ Loads the noise recording channels for a given microphone setup and noise condit
 **Args:**
  
  - <b>`mic_setup`</b> (str):  The microphone setup to load the noise recording for. 
- - <b>`condition`</b> (str):  The specific noise condition to load ("speed condition_window condition"). 
+ - <b>`condition`</b> (str):  The specific noise condition to load ("s'speed condition'_w'window condition'"). 
 
 
 
@@ -482,7 +482,7 @@ Loads the ventilation recording for a given microphone setup and condition.
 **Args:**
  
  - <b>`mic_setup`</b> (str):  The microphone setup to load the ventilation recording for. 
- - <b>`condition`</b> (str):  The specific ventilation condition to load ("ventilation level_window condition"). 
+ - <b>`condition`</b> (str):  The specific ventilation condition to load ("v'ventilation level'_w'window condition'"). 
 
 
 

@@ -53,7 +53,7 @@ class Car:
                 pass
             ventilation_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
 
-            if mic_setup == 'hybrid':
+            if mic_setup == 'hybrid': #  and len(self.__mic_setups == 1
                 # IRs
                 self.__irs[mic_setup] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
                 self.__irs['array'] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
@@ -492,7 +492,7 @@ class Car:
         if self.make + '_' + self.model == 'Honda_CRV':
             angles = {
                     'd55': -26,
-                    'fp': 26,
+                    'fp':  26,
                     'prl': -12,
                     'prm': 0,
                     'prr': 12

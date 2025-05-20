@@ -626,6 +626,7 @@ class Car:
         
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
         mic_range = range(8)
+        ir_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')    
         if not os.path.exists(ir_path):  # hybrid
             ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
             if mic_setup == 'array':

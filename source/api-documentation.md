@@ -337,8 +337,9 @@ Generates the convolved speech signal with the corresponding impulse response fo
 ```python
 get_ventilation(
     mic_setup: str,
-    window: int,
     level: int,
+    window: int,
+    version:str=None
     mics=None,
     use_correction_gains=True
 )
@@ -351,8 +352,9 @@ Retrieves and processes the ventilation recording for a given microphone setup, 
 **Args:**
  
  - <b>`mic_setup`</b> (str):  The microphone setup to use. 
- - <b>`window`</b> (int):  The window condition. 
  - <b>`level`</b> (int):  The ventilation level (must be 1, 2, or 3). 
+ - <b>`window`</b> (int):  The window condition. 
+ - <b>`version` </b> (str, optional): The version of the ventilation recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2". 
  - <b>`mics`</b> (int or list of int, optional):  The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used. 
  - <b>`use_correction_gains`</b> (bool, optional):  A boolean indicating whether to use the correction gains. Defaults to True. 
 

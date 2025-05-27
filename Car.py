@@ -622,7 +622,7 @@ class Car:
             ValueError: If the given ventilation condition is not available for the given microphone setup.
         """
         if condition not in self.ventilation_recordings[mic_setup]:
-            raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[condition].")
+            raise ValueError(f"Ventilation condition {condition} is not in Car.ventilation_recordings[mic_setup].")
         
         ventilation_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')
         mic_range = range(8)
@@ -833,7 +833,7 @@ class Car:
         return result
 
 
-    def get_ventilation(self, mic_setup: str, window:int, level: int, mics=None, use_correction_gains=True):
+    def get_ventilation(self, mic_setup: str, level: int, window:int, version:str=None, mics=None, use_correction_gains=True):
         """
         Retrieves and processes the ventilation recording for a given microphone setup, condition, and ventilation level.
         
@@ -841,6 +841,7 @@ class Car:
             mic_setup (str): The microphone setup to use.
             window (int): The window condition.
             level (int): The ventilation level (must be 1, 2, or 3).
+            version (str, optional): The version of the ventilation recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2". 
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
         
@@ -862,6 +863,8 @@ class Car:
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
         ventilation_condition = f'v{level}_w{window}'
+        if version:
+            ventilation_condition += f'_{version}'
         ventilation, _ = self.load_ventilation(mic_setup, ventilation_condition)
         # resample to fs
         if not isinstance(mics, list):

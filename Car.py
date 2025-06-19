@@ -114,6 +114,10 @@ class Car:
             with open(gains_file, 'r') as f:
                 self.__correction_gains = json.load(f)
 
+        if len(self.__mic_setups) == 1 and self.__mic_setups[0] == 'hybrid':
+            self.__mic_setups = ['array', 'distributed', 'hybrid']
+        
+
     def __repr__(self):
         return f'Car(path={self.__path!r}, json_info=False, info_dict={self.__in_dict!r})'
         
@@ -489,7 +493,7 @@ class Car:
                     'prm': 0,
                     'prr': 13,
                     }
-        if self.make + '_' + self.model == 'Honda_CRV':
+        if self.make + '_' + self.model == 'Honda_CR-V':
             angles = {
                     'd55': -26,
                     'fp':  26,
@@ -631,8 +635,11 @@ class Car:
             ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
             if mic_setup == 'array':
                 mic_range = range(4)
+                ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
             elif mic_setup == 'distributed':
                 mic_range = [2, 4, 5, 6, 7]
+                ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+
         ventilation, fs_ventilation = sf.read(ventilation_path)
         
         # resample
@@ -693,10 +700,11 @@ class Car:
         correction_factor = reference - convolved_reference_level
         gain = 10 ** (correction_factor / 20)
 
+        if mics is None:
+            mics = list(range(ir.shape[1]))
         if not isinstance(mics, list):
             mics = [mics]
-        if mics is None:
-            mics = range(ir.shape[1])
+            
         result = []
         for mic in mics:
             # Apply correction factor to selected microphone
@@ -744,10 +752,10 @@ class Car:
             condition += f'_{version}'
         noise, _ = self.load_noise(mic_setup, condition)
 
+        if mics is None:
+            mics = list(range(noise.shape[1]))
         if not isinstance(mics, list):
             mics = [mics]
-        if mics is None:
-            mics = range(noise.shape[1])
         noise = noise[:, mics] 
         # apply correction gain
         if use_correction_gains:
@@ -815,10 +823,10 @@ class Car:
         # Calculate correction factor
         correction_factor = la - level
         gain = 10 ** (correction_factor / 20)
+        if mics is None:
+            mics = list(range(radio_ir.shape[1]))
         if not isinstance(mics, list):
             mics = [mics]
-        if mics is None:
-            mics = range(radio_ir.shape[1])
         result = []
         for mic in mics:
             convolved_radio_ir = np.convolve(radio_audio, radio_ir[:, mic], mode='full')
@@ -867,10 +875,10 @@ class Car:
             ventilation_condition += f'_{version}'
         ventilation, _ = self.load_ventilation(mic_setup, ventilation_condition)
         # resample to fs
+        if mics is None:
+            mics = list(range(ventilation.shape[1]))
         if not isinstance(mics, list):
             mics = [mics]
-        if mics is None:
-            mics = range(ventilation.shape[1])
         ventilation = ventilation[:, mics]
         # apply correction gain
         if use_correction_gains:

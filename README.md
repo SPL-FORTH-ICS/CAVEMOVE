@@ -87,7 +87,7 @@
 # About The Project
 CAVEMOVE is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
 
-This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo following this [link](https://zenodo.org/records/13594243). In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
+This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo following this [link](https://doi.org/10.5281/zenodo.13594242). In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
 
 CAVEMOVE API is currently available in python, and relies only on basic python sound processing packages (librosa, numpy, scipy) and natsort. A Matlab version is also available. Some basic principles followed in CAVEMOVE are the following. 
 - We provide functions for retrieving speech and noise components as separate python entities (numpy arrays). Users must manually add the speech and noise components to derive a mixture.
@@ -140,7 +140,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
    git clone https://github.com/SPL-FORTH-ICS/CAVEMOVE
    ```
 
-2. Download CAVEMOVE dataset from [Zenodo](https://zenodo.org/records/13594243) and extract folders.
+2. Download CAVEMOVE dataset from [Zenodo](https://doi.org/10.5281/zenodo.13594242) and extract folders.
 
 
 3. Install dependancies
@@ -168,7 +168,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
    git clone https://github.com/SPL-FORTH-ICS/CAVEMOVE
    ```
 
-2. Download CAVEMOVE dataset from [Zenodo](https://zenodo.org/records/13594243) and extract folders.
+2. Download CAVEMOVE dataset from [Zenodo](https://doi.org/10.5281/zenodo.13594242) and extract folders.
 
 
 3. Use the ```car.m``` class in ```matlab``` folder

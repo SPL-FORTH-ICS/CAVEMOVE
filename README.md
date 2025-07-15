@@ -34,7 +34,7 @@
     <img src="source/images/cavemoveLogoJune2024.png" alt="Logo" >
   </a>
 
-  <h3 align="center">CAVEMOVE</h3>
+  <h1 align="center">CAVEMOVE</h1>
 
   <p align="center">
     <!-- <br />
@@ -84,12 +84,12 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+# About The Project
 CAVEMOVE is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
 
 This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the open access audio data from zenodo following this [link](https://zenodo.org/records/13594243). In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
 
-CAVEMOVE API is currently available in python, and relies only on basic python sound processing packages (librosa, numpy, scipy) and natsort. A Matlab version will soon follow. Some basic principles followed in CAVEMOVE are the following. 
+CAVEMOVE API is currently available in python, and relies only on basic python sound processing packages (librosa, numpy, scipy) and natsort. A Matlab version is also available. Some basic principles followed in CAVEMOVE are the following. 
 - We provide functions for retrieving speech and noise components as separate python entities (numpy arrays). Users must manually add the speech and noise components to derive a mixture.
 - Noise recordings are derived as a function of driving conditions, mainly the speed (in km/hour) and the window aperture (3 or 4 different windows conditions are considered in each vehicle)
 - Apart from the basic noise components, we also provide means for adding ventilation/air-condition noise and also, interference from the built-in car audio system (e.g. radio, cd player etc)
@@ -127,10 +127,11 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+# Getting Started
+##  Pyhton
 ### Prerequisites
 
-* A ```python 3.11``` enviroment .
+* A ```python 3.11``` enviroment.
 
 ### Installation
 
@@ -144,7 +145,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 3. Install dependancies
    ```sh
-   pip install -r source/requirements.txt
+   pip install -r pyhton/source/requirements.txt
    ```
 
 4. Change git remote url to avoid accidental pushes to base project
@@ -153,12 +154,30 @@ This section should list any major frameworks/libraries used to bootstrap your p
    git remote -v # confirm the changes
    ```
 
+## Matlab
+### Prerequisites
+
+* A ```matlab``` or ```octave``` installation.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Installation
+
+1. Clone the repo
+   ```sh
+   git clone https://github.com/SPL-FORTH-ICS/CAVEMOVE
+   ```
+
+2. Download CAVEMOVE dataset from [Zenodo](https://zenodo.org/records/13594243) and extract folders.
+
+
+3. use the ```car.m``` class in ```matlab``` folder
 
 
 
 <!-- QUICKSTART -->
-## Quick Start
+# Quick Start
+## Python
 
 ```python
 from Car import Car
@@ -213,14 +232,69 @@ components = my_car.get_components(mic_setup=my_mic_setup, location=my_location,
 sf.write('mix.wav', mix[:,0], my_car.fs)
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/documentation.md) or to the [CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/CAVEMOVE_demo.ipynb)._
+_For more examples, please refer to the [Documentation](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/pyhton/source/api-documentation.md) or to the [pyhton CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/python/CAVEMOVE_demo.ipynb)._
 
+## Matlab
+```matlab
+dataset_path = 'path/to/cavemove/dataset';
+car_names = ["Volkswagen_Golf", "AlfaRomeo_146", "Smart_forfour"];
+car_path = ([dataset_path '\' car_names{1} '\']);
+radio_path = 'path/to/radio.wav';
+voice_path = 'path/to/voice.wav;
+
+sampling_rate = 16000;  
+my_mic_setup = 'array';
+my_location = 'd50';
+my_speed = 50;
+my_window = 1;
+my_Ls = 70;
+my_La = 60;
+my_mics = [1, 2, 3, 4, 5, 6, 7, 8];
+my_vent_level = 1;
+my_car = car("path", car_path, "fs", sampling_rate);
+
+%% Get noise component
+n = my_car.get_noise("mic_setup", my_mic_setup, "speed", my_speed, "window", my_window, "mics", my_mics);
+
+%% Get speech component
+[dry_voice, fs_dry_voice] = audioread(voice_path);
+s = my_car.get_speech("mic_setup", my_mic_setup, "location", my_location, ...
+                      "window", my_window, "ls", my_Ls, "dry_speech", dry_voice, "mics", my_mics);
+%% Get radio component
+[radio_tune, fs_radio] = audioread(radio_path);
+a = my_car.get_radio("mic_setup",my_mic_setup, "window", my_window, ...
+                     "la", my_La, "radio_audio" ,radio_tune, "mics", my_mics);
+
+%% Get ventilation noise component
+v = my_car.get_ventilation("mic_setup", my_mic_setup, "window", my_window, "level" ,my_vent_level, "mics", my_mics);
+
+%% Match duration of components to speech duration
+[s_new, a_new, v_new, n_new] = my_car.match_duration(s, a, v, n);
+
+%%  add components to produce a mix
+mix = s_new + a_new + v_new + n_new;
+
+
+%% Finally, get_components can return all the above components or cominations of those, in matched duration.by providing te correspodins arguments. See Documentation for more info
+components = my_car.get_components("mic_setup", my_mic_setup, "location", my_location, "speed", my_speed, ...
+                                   "window", my_window, "mics", my_mics, "ls", my_Ls, "dry_speech", dry_voice, ...
+                                   "la", my_La, "radio_audio", radio_tune, "vent_level", 1);
+
+%% export selected microphone channel as a wav file
+audiowrite('mix.wav', mix(:,1), my_car.fs)
+```
+
+_For more examples, please refer to the Matlab Documentation (using the ```doc``` and ```help``` commands) or to the [matlab CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/matlab/CAVEMOVE_demo.ipynb)._
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DOCUMENTATION -->
-## Documentation
-For extensive documentation for the API refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md) file. As described in the <a href="#about-the-project">About The Project</a> section, this API accompanies a specific dataset. Please refer to the <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.pdf">Dataset Documentation</a> file for information regarding naming conventions etc.
+# Documentation
+As described in the <a href="#about-the-project">About The Project</a> section, this API accompanies a specific dataset. Please refer to the <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.pdf">Dataset Documentation</a> file for information regarding naming conventions etc.
+## Pyhton
+For extensive documentation for the API refer to [documentation.md](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md) file. 
 
+## Matlab
+For extensive documentation for the API refer to to the Matlab Documentation (using the ```doc``` and ```help``` commands). 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- ROADMAP -->

@@ -171,7 +171,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 2. Download CAVEMOVE dataset from [Zenodo](https://zenodo.org/records/13594243) and extract folders.
 
 
-3. use the ```car.m``` class in ```matlab``` folder
+3. Use the ```car.m``` class in ```matlab``` folder
 
 
 

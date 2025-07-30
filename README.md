@@ -284,7 +284,7 @@ components = my_car.get_components("mic_setup", my_mic_setup, "location", my_loc
 audiowrite('mix.wav', mix(:,1), my_car.fs)
 ```
 
-_For more examples, please refer to the Matlab Documentation (using the ```doc``` and ```help``` commands) or to the [matlab CAVEMOVE demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/matlab/CAVEMOVE_demo.ipynb)._
+_For more examples, please refer to the Matlab Documentation (using the ```doc``` and ```help``` commands), to the [matlab livescript  demo](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/matlab/api_matlab_demo.mlx) or the [PDF](https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/matlab/api_matlab_demo.pdf) version._
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DOCUMENTATION -->

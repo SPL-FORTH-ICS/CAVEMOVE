@@ -82,7 +82,7 @@ class Car:
                 self.__ventilation['distributed'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
 
                 # References
-                ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
+                ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
                 with open(ref_file, 'r') as f:
                     self.__references[mic_setup] = json.load(f)
                 self.__references['array'] = self.__references[mic_setup].copy()
@@ -105,12 +105,12 @@ class Car:
                 self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
 
                 # References
-                ref_file = os.path.join('source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
+                ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
                 with open(ref_file, 'r') as f:
                     self.__references[mic_setup] = json.load(f)
 
             # Correction gains
-            gains_file = os.path.join('source', 'correction_gains', 'gains.json')
+            gains_file = os.path.join('pyhton', 'source', 'correction_gains', 'gains.json')
             with open(gains_file, 'r') as f:
                 self.__correction_gains = json.load(f)
 

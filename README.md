@@ -42,6 +42,8 @@
     <br /> -->
     Acoustic data collection for speech enabled technologies in moving vehicles.
     <br />
+    <a href="https://arxiv.org/abs/2508.19691v1">Paper</a>
+    ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/api-documentation.md">API Documentation</a>
     ·
     <a href="https://github.com/SPL-FORTH-ICS/CAVEMOVE/blob/main/source/dataset-documentation.pdf">Dataset Documentation</a>
@@ -85,7 +87,7 @@
 
 <!-- ABOUT THE PROJECT -->
 # About The Project
-CAVEMOVE is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
+CAVEMOVE ([arXiv paper](https://arxiv.org/abs/2508.19691v1)) is a research project dedicated to the collection of audio data for the study of voice enabled technologies inside moving vehicles. The recording process involves (i) recordings of acoustic impulse responses, which are acquired at static conditions and provide the means for modeling the speech and car-audio components and (ii) recordings of acoustic noise at a wide range of both static and in-motion conditions. Data are recorded with two different microphone configurations and particularly (i) a compact circular microphone array or (ii) a distributed microphone setup. 
 
 This document explains the Application Programming Interface (API) that was designed in the context of CAVEMOVE. Using CAVEMOVE data and API, the user can easily synthesize the microphone signals required for research on voice enabled technologies, mainly by mixing speech components with noise components. Note that for this API to be useful, you must first download the latest version of open access audio data from zenodo following this [link](https://doi.org/10.5281/zenodo.13594242). In Zenodo, we also provide a detailed description of the driving conditions under which the audio recordings were obtained.
 
@@ -312,6 +314,23 @@ See the [open issues](https://github.com/SPL-FORTH-ICS/CAVEMOVE/issues) for a fu
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
+## Cite
+
+Please cite our [paper](https://arxiv.org/abs/2508.19691v1) if you find it useful:
+
+
+```
+@misc{Stefanakis2024CAVEMOVE,
+      author    = {Stefanakis N. and Kalaitzakis M and Symiakakis A. ans Papadakis S. and Pavlidi D.},
+      title     = {CAVEMOVE: An Acoustic Database for the Study of Voice-enabled Technologies inside Moving Vehicles},
+      journal   = {arXiv preprint arXiv:2508.19691},
+      year      = {2025},
+      eprint        = {2508.19691},
+      archivePrefix = {arXiv},
+      doi       = {10.48550/arXiv.2508.19691},
+      url       = {https://arxiv.org/abs/2508.19691v1}
+      }
+```
 
 
 <!-- CONTRIBUTING -->

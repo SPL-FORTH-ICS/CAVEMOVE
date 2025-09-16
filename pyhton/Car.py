@@ -42,6 +42,7 @@ class Car:
         self.__radio_irs = {}
         self.__references = {}
         self.__ventilation = {}
+        self.__uncontrolled_conditions = {}
         natsort_key = natsort_keygen(key=lambda y: y.lower()) 
 
         for mic_setup in self.__mic_setups:
@@ -52,8 +53,10 @@ class Car:
             except :
                 pass
             ventilation_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
+            uncontrolled_list = os.listdir(os.path.join(self.__path, mic_setup, 'uncontrolled_conditions'))
 
             if mic_setup == 'hybrid': #  and len(self.__mic_setups == 1
+                # TODO: uncontrolled conditions
                 # IRs
                 self.__irs[mic_setup] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
                 self.__irs['array'] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
@@ -103,6 +106,9 @@ class Car:
 
                 # Ventilation
                 self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+
+                # Unontrolled conditions
+                self.__uncontrolled_conditions[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
 
                 # References
                 ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
@@ -271,6 +277,16 @@ class Car:
     def correction_gains(self, value):
         """Prevents setting the correction gains."""
         raise AttributeError('Cannot set correction_gains.')
+    
+    @property
+    def uncontrolled_conditions(self):
+        """Returns a dictionary of available uncontrolled conditions recordings per microphone configuration."""
+        return self.__uncontrolled_conditions
+    
+    @uncontrolled_conditions.setter
+    def uncontrolled_conditions(self, value):
+        """Prevents setting the uncontrolled conditions."""
+        raise AttributeError('Cannot set uncontrolled conditions.')
         
     
     # private methods
@@ -636,6 +652,7 @@ class Car:
             if mic_setup == 'array':
                 mic_range = range(4)
                 ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+                # TODO: above line can be deleted?
             elif mic_setup == 'distributed':
                 mic_range = [2, 4, 5, 6, 7]
                 ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
@@ -647,6 +664,41 @@ class Car:
             ventilation = librosa.resample(ventilation, orig_sr=fs_ventilation, target_sr=self.fs, axis=0)
             fs_ventilation = self.fs
         return ventilation[:, mic_range], fs_ventilation
+    
+
+    def load_uncontrolled_condition(self, mic_setup: str, condition):
+        """
+        Loads the uncontrolled condition recording for a given microphone setup and condition.
+        
+        Args:
+            mic_setup (str): The microphone setup to load the uncontrolled condition recording for.
+            condition (str): The specific uncontrolled condition to load.
+        
+        Returns:
+            tuple: A tuple containing the uncontrolled condition data as a NumPy array (N_samples x M_channels) and the sampling frequency.
+        
+        Raises:
+            ValueError: If the given uncontrolled condition is not available for the given microphone setup.
+        """
+        if condition not in self.uncontrolled_conditions[mic_setup]:
+            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_conditions[mic_setup].")
+        
+        uc_path = os.path.join(self.__path, mic_setup, 'uncontrolled_conditions', condition + '.wav')
+        mic_range = range(8)
+        if not os.path.exists(uc_path):  # hybrid
+            uc_path = os.path.join(self.__path, 'hybrid', 'uncontrolled_conditions', condition + '.wav')
+            if mic_setup == 'array':
+                mic_range = range(4)
+            elif mic_setup == 'distributed':
+                mic_range = [2, 4, 5, 6, 7]
+
+        uc, fs_uc = sf.read(uc_path)
+        
+        # resample
+        if fs_uc != self.fs:
+            uc = librosa.resample(uc, orig_sr=fs_uc, target_sr=self.fs, axis=0)
+            fs_uc = self.fs
+        return uc[:, mic_range], fs_uc
 
 
     def get_speech(self, mic_setup: str, location: str, window:int, ls: float, dry_speech, mics=None, use_correction_gains=True):

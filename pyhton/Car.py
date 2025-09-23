@@ -79,10 +79,14 @@ class Car:
                     self.__radio_irs['distributed'] = None
 
                 # Ventilation
-                wav_list = os.listdir(os.path.join(self.__path, mic_setup, 'ventilation'))
                 self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
                 self.__ventilation['array'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
                 self.__ventilation['distributed'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
+
+                 # Uncontrolled conditions
+                self.__uncontrolled_conditions[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_conditions['array'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_conditions['distributed'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
 
                 # References
                 ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
@@ -649,15 +653,11 @@ class Car:
         ir_path = os.path.join(self.__path, mic_setup, 'ventilation', condition + '.wav')    
         if not os.path.exists(ir_path):  # hybrid
             ir_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+            ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
             if mic_setup == 'array':
                 mic_range = range(4)
-                ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
-                # TODO: above line can be moved outside if-elif?
             elif mic_setup == 'distributed':
                 mic_range = [2, 4, 5, 6, 7]
-                ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
-                # TODO: above line can be deleted?
-                # TODO: same on all load_... methods
 
         ventilation, fs_ventilation = sf.read(ventilation_path)
         
@@ -958,6 +958,8 @@ class Car:
             ValueError: If mics is not an integer or a list of integers.
             ValueError: If the given uncontrolled condition is not available for the given microphone setup.
         """
+        # TODO: add functions to documentation
+        # TODO: PDF doc
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
         if condition not in self.uncontrolled_conditions[mic_setup]:

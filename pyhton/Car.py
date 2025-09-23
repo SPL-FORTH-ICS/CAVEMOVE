@@ -652,10 +652,12 @@ class Car:
             if mic_setup == 'array':
                 mic_range = range(4)
                 ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
-                # TODO: above line can be deleted?
+                # TODO: above line can be moved outside if-elif?
             elif mic_setup == 'distributed':
                 mic_range = [2, 4, 5, 6, 7]
                 ventilation_path = os.path.join(self.__path, 'hybrid', 'ventilation', condition + '.wav')
+                # TODO: above line can be deleted?
+                # TODO: same on all load_... methods
 
         ventilation, fs_ventilation = sf.read(ventilation_path)
         
@@ -938,6 +940,42 @@ class Car:
             ventilation = ventilation * np.array(gains)
         return ventilation  
     
+
+    def get_uncontrolled_condition(self, mic_setup: str, condition, mics=None, use_correction_gains=True):
+        """
+        Retrieves the uncontrolled condition recording for a given microphone setup and condition.
+        
+        Args:
+            mic_setup (str): The microphone setup to use.
+            condition (str): The specific uncontrolled condition to load.
+            mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
+            use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
+
+        Returns:
+            numpy.ndarray: The processed uncontrolled condition signal for the specified microphones.
+        Raises:
+            ValueError: If the microphone setup is not available.
+            ValueError: If mics is not an integer or a list of integers.
+            ValueError: If the given uncontrolled condition is not available for the given microphone setup.
+        """
+        if mic_setup not in self.mic_setups:
+            raise ValueError(f"Microphone setup {mic_setup} is not available.")
+        if condition not in self.uncontrolled_conditions[mic_setup]:
+            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_conditions[{mic_setup}].")
+        if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
+            raise ValueError(f"mics must be an integer or a list of integers.")
+        
+        uc, _ = self.load_uncontrolled_condition(mic_setup, condition)
+        if mics is None:
+            mics = list(range(uc.shape[1]))
+        if not isinstance(mics, list):
+            mics = [mics]
+        uc = uc[:, mics]
+        # apply correction gain
+        if use_correction_gains:
+            gains = [self.correction_gains[str(mic)] for mic in mics]
+            uc = uc * np.array(gains)
+        return uc
 
     def get_components(self, mic_setup, location, speed:int, window:int, version:str=None, mics=None, ls=None, dry_speech=None, la=None, radio_audio=None, vent_level=None, use_correction_gains=True): 
         """

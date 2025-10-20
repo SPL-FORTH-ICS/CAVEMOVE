@@ -42,7 +42,7 @@ class Car:
         self.__radio_irs = {}
         self.__references = {}
         self.__ventilation = {}
-        self.__uncontrolled_conditions = {}
+        self.__uncontrolled_noises = {}
         natsort_key = natsort_keygen(key=lambda y: y.lower()) 
 
         for mic_setup in self.__mic_setups:
@@ -83,9 +83,9 @@ class Car:
                 self.__ventilation['distributed'] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
 
                  # Uncontrolled conditions
-                self.__uncontrolled_conditions[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
-                self.__uncontrolled_conditions['array'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
-                self.__uncontrolled_conditions['distributed'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_noises[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_noises['array'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_noises['distributed'] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
 
                 # References
                 ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
@@ -111,7 +111,7 @@ class Car:
                 self.__ventilation[mic_setup] = sorted([wav[:-4] for wav in ventilation_list], key=natsort_key)
 
                 # Unontrolled conditions
-                self.__uncontrolled_conditions[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
+                self.__uncontrolled_noises[mic_setup] = sorted([wav[:-4] for wav in uncontrolled_list], key=natsort_key)
 
                 # References
                 ref_file = os.path.join('pyhton', 'source', 'references_16kHz', self.__make + '_' + self.__model, mic_setup, 'reference.json')
@@ -282,13 +282,13 @@ class Car:
         raise AttributeError('Cannot set correction_gains.')
     
     @property
-    def uncontrolled_conditions(self):
-        """Returns a dictionary of available uncontrolled conditions recordings per microphone configuration."""
-        return self.__uncontrolled_conditions
+    def uncontrolled_noises(self):
+        """Returns a dictionary of available uncontrolled noise conditions recordings per microphone configuration."""
+        return self.__uncontrolled_noises
     
-    @uncontrolled_conditions.setter
-    def uncontrolled_conditions(self, value):
-        """Prevents setting the uncontrolled conditions."""
+    @uncontrolled_noises.setter
+    def uncontrolled_noises(self, value):
+        """Prevents setting the uncontrolled noise conditions."""
         raise AttributeError('Cannot set uncontrolled conditions.')
         
     
@@ -691,22 +691,22 @@ class Car:
         return ventilation[:, mic_range], fs_ventilation
     
 
-    def load_uncontrolled_condition(self, mic_setup: str, condition: str):
+    def load_uncontrolled_noise(self, mic_setup: str, condition: str):
         """
-        Loads the uncontrolled condition recording for a given microphone setup and condition.
+        Loads the uncontrolled noise condition recording for a given microphone setup and condition.
         
         Args:
-            mic_setup (str): The microphone setup to load the uncontrolled condition recording for.
-            condition (str): The specific uncontrolled condition to load in the format 'unc_xxx.
+            mic_setup (str): The microphone setup to load the uncontrolled noise condition recording for.
+            condition (str): The specific uncontrolled noise condition to load in the format 'unc_xxx.
         
         Returns:
-            tuple: A tuple containing the uncontrolled condition data as a NumPy array (N_samples x M_channels) and the sampling frequency.
+            tuple: A tuple containing the uncontrolled noise condition data as a NumPy array (N_samples x M_channels) and the sampling frequency.
         
         Raises:
-            ValueError: If the given uncontrolled condition is not available for the given microphone setup.
+            ValueError: If the given uncontrolled noise condition is not available for the given microphone setup.
         """
-        if condition not in self.uncontrolled_conditions[mic_setup]:
-            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_conditions[mic_setup].")
+        if condition not in self.uncontrolled_noises[mic_setup]:
+            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_noises[mic_setup].")
         
         uc_path = os.path.join(self.__path, mic_setup, 'uncontrolled_conditions', condition + '.wav')
         mic_range = range(8)
@@ -964,9 +964,9 @@ class Car:
         return ventilation  
     
 
-    def get_uncontrolled_condition(self, mic_setup: str, condition: str, mics=None, use_correction_gains=True):
+    def get_uncontrolled_noise(self, mic_setup: str, condition: str, mics=None, use_correction_gains=True):
         """
-        Retrieves the uncontrolled condition recording for a given microphone setup and condition.
+        Retrieves the uncontrolled noise condition recording for a given microphone setup and condition.
         
         Args:
             mic_setup (str): The microphone setup to use.
@@ -983,12 +983,12 @@ class Car:
         """
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
-        if condition not in self.uncontrolled_conditions[mic_setup]:
-            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_conditions[{mic_setup}].")
+        if condition not in self.uncontrolled_noises[mic_setup]:
+            raise ValueError(f"Uncontrolled condition {condition} is not in Car.uncontrolled_noises[{mic_setup}].")
         if not (isinstance(mics, list) and all(isinstance(item, int) for item in mics)) and not isinstance(mics, int) and mics is not None:
             raise ValueError(f"mics must be an integer or a list of integers.")
         
-        uc, _ = self.load_uncontrolled_condition(mic_setup, condition)
+        uc, _ = self.load_uncontrolled_noise(mic_setup, condition)
         if mics is None:
             mics = list(range(uc.shape[1]))
         if not isinstance(mics, list):

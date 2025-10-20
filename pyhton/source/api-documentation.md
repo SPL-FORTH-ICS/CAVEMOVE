@@ -91,9 +91,9 @@ Returns a dictionary of available speaker locations per microphone configuration
 
 ---
 
-#### <kbd>property</kbd> uncontrolled_conditions
+#### <kbd>property</kbd> uncontrolled_noises
 
-Returns a dictionary of available uncontrolled conditions recordings per microphone configuration. 
+Returns a dictionary of available uncontrolled noise conditions recordings per microphone configuration. 
 
 ---
 
@@ -364,7 +364,7 @@ Generates the convolved speech signal with the corresponding impulse response fo
 
 <a href="../pyhton/Car.py#L943"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-### <kbd>function</kbd> `get_uncontrolled_condition`
+### <kbd>function</kbd> `get_uncontrolled_noise`
 
 ```python
 get_uncontrolled_condition(
@@ -375,14 +375,14 @@ get_uncontrolled_condition(
 )
 ```
 
-Retrieves the uncontrolled condition recording for a given microphone setup and condition. 
+Retrieves the uncontrolled noise condition recording for a given microphone setup and condition. 
 
 
 
 **Args:**
  
  - <b>`mic_setup`</b> (str):  The microphone setup to use. 
- - <b>`condition`</b> (str):  The specific uncontrolled condition to load. 
+ - <b>`condition`</b> (str):  The specific uncontrolled noise condition to load. 
  - <b>`mics`</b> (int or list of int, optional):  The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used. 
  - <b>`use_correction_gains`</b> (bool, optional):  A boolean indicating whether to use the correction gains. Defaults to True. 
 
@@ -390,13 +390,13 @@ Retrieves the uncontrolled condition recording for a given microphone setup and 
 
 **Returns:**
  
- - <b>`numpy.ndarray`</b>:  The processed uncontrolled condition signal for the specified microphones. 
+ - <b>`numpy.ndarray`</b>:  The processed uncontrolled noise condition signal for the specified microphones. 
 
 **Raises:**
  
  - <b>`ValueError`</b>:  If the microphone setup is not available. 
  - <b>`ValueError`</b>:  If mics is not an integer or a list of integers. 
- - <b>`ValueError`</b>:  If the given uncontrolled condition is not available for the given microphone setup. 
+ - <b>`ValueError`</b>:  If the given uncontrolled noise condition is not available for the given microphone setup. 
 
 ---
 
@@ -541,32 +541,32 @@ Loads the radio impulse response (IR) channels for a given microphone setup and 
 
 <a href="../pyhton/Car.py#L670"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-### <kbd>function</kbd> `load_uncontrolled_condition`
+### <kbd>function</kbd> `load_uncontrolled_noise`
 
 ```python
 load_uncontrolled_condition(mic_setup: str, condition)
 ```
 
-Loads the uncontrolled condition recording for a given microphone setup and condition. 
+Loads the uncontrolled noise condition recording for a given microphone setup and condition. 
 
 
 
 **Args:**
  
- - <b>`mic_setup`</b> (str):  The microphone setup to load the uncontrolled condition recording for. 
- - <b>`condition`</b> (str):  The specific uncontrolled condition to load. 
+ - <b>`mic_setup`</b> (str):  The microphone setup to load the uncontrolled noise condition recording for. 
+ - <b>`condition`</b> (str):  The specific uncontrolled noise condition to load. 
 
 
 
 **Returns:**
  
- - <b>`tuple`</b>:  A tuple containing the uncontrolled condition data as a NumPy array (N_samples x M_channels) and the sampling frequency. 
+ - <b>`tuple`</b>:  A tuple containing the uncontrolled noise condition data as a NumPy array (N_samples x M_channels) and the sampling frequency. 
 
 
 
 **Raises:**
  
- - <b>`ValueError`</b>:  If the given uncontrolled condition is not available for the given microphone setup. 
+ - <b>`ValueError`</b>:  If the given uncontrolled noise condition is not available for the given microphone setup. 
 
 ---
 

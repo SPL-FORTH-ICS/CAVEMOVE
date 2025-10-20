@@ -142,6 +142,32 @@ Calculates the steering vectors for a given frequency and angle for a microphone
 
 ---
 
+<a href="../pyhton/Car.py#L361"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>classmethod</kbd> `dBFS_to_dBA_mono`
+
+```python
+dBFS_to_dBA_mono(signal, channel, fs)
+```
+
+Convert a mono time-domain signal level from dBFS to an A-weighted dBA Leq value. 
+
+
+
+**Args:**
+ 
+ - <b>`signal`</b> (numpy.ndarray):  1-D array of audio samples (mono). 
+ - <b>`channel`</b> (int):  The microphone configuration channel index that 'signal' comes from. 
+ - <b>`fs (int or float}`</b>:  Sampling frequency of `signal` in Hz. 
+
+
+
+**Returns:**
+ 
+ - <b>`numpy.ndarray`</b>:  The A-weighted dBA Leq value corresponding to the input signal. 
+
+---
+
 <a href="../Car.py#L780"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `get_components`

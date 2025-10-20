@@ -313,7 +313,9 @@ class Car:
             print(f"No folders found with {condition} in their names.")
             return None
         
-    def __A_weighting_filter(self, s, fs):
+
+    @classmethod    
+    def __A_weighting_filter(cls, s, fs):
         """Design of an A-weighting filter.
         b, a = A_weighting(fs) designs a digital A-weighting filter for sampling frequency `fs`. Usage: y = scipy.signal.lfilter(b, a, x).
         Warning: `fs` should normally be higher than 20 kHz. For example,
@@ -356,7 +358,29 @@ class Car:
         return np.sqrt(np.sum(np.square(x))/len(x))
         
 
-    # class methods
+    @classmethod
+    def dBFS_to_dBA_mono(cls, signal, channel, fs):
+        """
+        Convert a mono time-domain signal level from dBFS to an A-weighted dBA Leq value.
+
+        Args:
+            signal  (numpy.ndarray): 1-D array of audio samples (mono).
+            channel (int): The microphone configuration channel index that 'signal' comes from.
+            fs (int or float}: Sampling frequency of `signal` in Hz.
+
+        Returns:
+            numpy.ndarray: The A-weighted dBA Leq value corresponding to the input signal.
+        """
+        dBFS_A_to_dBA = [124.8755,124.8381,124.7017,124.9197,124.3212,126.4183,125.8413,124.9133]
+
+        filtered_signal = cls.__A_weighting_filter(signal, fs)
+
+        dBFS_Leq_A = 10*(np.log10(np.square(np.linalg.norm(filtered_signal))/len(filtered_signal)))
+
+        dBA = dBFS_Leq_A+dBFS_A_to_dBA[channel]
+        return dBA
+    
+
     @classmethod
     def match_duration(cls, n: list, fs):
         """
@@ -742,7 +766,7 @@ class Car:
         ir, _ = self.load_ir(mic_setup, ir_condition) 
         ir_reference = ir[:, self.__reference_mic[mic_setup]]
         convolved_reference_signal = np.convolve(dry_speech, ir_reference, mode='full')
-        convolved_reference_signal = self.__A_weighting_filter(convolved_reference_signal, self.fs)
+        convolved_reference_signal = Car.__A_weighting_filter(convolved_reference_signal, self.fs)
         # Calculate RMS
         convolved_reference_rms = Car.__calculate_rms(convolved_reference_signal)
         # to dB
@@ -867,7 +891,7 @@ class Car:
 
         convolved_radio_reference_signal = np.convolve(radio_audio, radio_ir_reference, mode='full')
         # Apply A-weighting filter
-        convolved_radio_reference_signal = self.__A_weighting_filter(convolved_radio_reference_signal, self.fs)
+        convolved_radio_reference_signal = Car.__A_weighting_filter(convolved_radio_reference_signal, self.fs)
         # Calculate RMS
         convolved_radio_rms = Car.__calculate_rms(convolved_radio_reference_signal)
         # to dB

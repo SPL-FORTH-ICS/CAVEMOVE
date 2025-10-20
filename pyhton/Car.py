@@ -56,7 +56,6 @@ class Car:
             uncontrolled_list = os.listdir(os.path.join(self.__path, mic_setup, 'uncontrolled_conditions'))
 
             if mic_setup == 'hybrid': #  and len(self.__mic_setups == 1
-                # TODO: uncontrolled conditions
                 # IRs
                 self.__irs[mic_setup] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
                 self.__irs['array'] = sorted([wav[:-4] for wav in irs_list], key=natsort_key)
@@ -668,13 +667,13 @@ class Car:
         return ventilation[:, mic_range], fs_ventilation
     
 
-    def load_uncontrolled_condition(self, mic_setup: str, condition):
+    def load_uncontrolled_condition(self, mic_setup: str, condition: str):
         """
         Loads the uncontrolled condition recording for a given microphone setup and condition.
         
         Args:
             mic_setup (str): The microphone setup to load the uncontrolled condition recording for.
-            condition (str): The specific uncontrolled condition to load.
+            condition (str): The specific uncontrolled condition to load in the format 'unc_xxx.
         
         Returns:
             tuple: A tuple containing the uncontrolled condition data as a NumPy array (N_samples x M_channels) and the sampling frequency.
@@ -941,13 +940,13 @@ class Car:
         return ventilation  
     
 
-    def get_uncontrolled_condition(self, mic_setup: str, condition, mics=None, use_correction_gains=True):
+    def get_uncontrolled_condition(self, mic_setup: str, condition: str, mics=None, use_correction_gains=True):
         """
         Retrieves the uncontrolled condition recording for a given microphone setup and condition.
         
         Args:
             mic_setup (str): The microphone setup to use.
-            condition (str): The specific uncontrolled condition to load.
+            condition (str): The specific uncontrolled condition to load in the format 'unc_xxx'.
             mics (int or list of int, optional): The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used.
             use_correction_gains (bool, optional): A boolean indicating whether to use the correction gains. Defaults to True.
 
@@ -958,8 +957,6 @@ class Car:
             ValueError: If mics is not an integer or a list of integers.
             ValueError: If the given uncontrolled condition is not available for the given microphone setup.
         """
-        # TODO: add functions to documentation
-        # TODO: PDF doc
         if mic_setup not in self.mic_setups:
             raise ValueError(f"Microphone setup {mic_setup} is not available.")
         if condition not in self.uncontrolled_conditions[mic_setup]:

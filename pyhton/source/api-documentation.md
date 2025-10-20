@@ -91,6 +91,12 @@ Returns a dictionary of available speaker locations per microphone configuration
 
 ---
 
+#### <kbd>property</kbd> uncontrolled_conditions
+
+Returns a dictionary of available uncontrolled conditions recordings per microphone configuration. 
+
+---
+
 #### <kbd>property</kbd> ventilation_recordings
 
 Returns a dictionary of available ventilation conditions recordings per microphone configuration. 
@@ -330,6 +336,44 @@ Generates the convolved speech signal with the corresponding impulse response fo
 
 ---
 
+<a href="../pyhton/Car.py#L943"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>function</kbd> `get_uncontrolled_condition`
+
+```python
+get_uncontrolled_condition(
+    mic_setup: str,
+    condition,
+    mics=None,
+    use_correction_gains=True
+)
+```
+
+Retrieves the uncontrolled condition recording for a given microphone setup and condition. 
+
+
+
+**Args:**
+ 
+ - <b>`mic_setup`</b> (str):  The microphone setup to use. 
+ - <b>`condition`</b> (str):  The specific uncontrolled condition to load. 
+ - <b>`mics`</b> (int or list of int, optional):  The microphone index or a list of microphone indices to use. Defaults to None. If mics is None, all microphones are used. 
+ - <b>`use_correction_gains`</b> (bool, optional):  A boolean indicating whether to use the correction gains. Defaults to True. 
+
+
+
+**Returns:**
+ 
+ - <b>`numpy.ndarray`</b>:  The processed uncontrolled condition signal for the specified microphones. 
+
+**Raises:**
+ 
+ - <b>`ValueError`</b>:  If the microphone setup is not available. 
+ - <b>`ValueError`</b>:  If mics is not an integer or a list of integers. 
+ - <b>`ValueError`</b>:  If the given uncontrolled condition is not available for the given microphone setup. 
+
+---
+
 <a href="../Car.py#L737"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `get_ventilation`
@@ -466,6 +510,37 @@ Loads the radio impulse response (IR) channels for a given microphone setup and 
  
  - <b>`ValueError`</b>:  If radio IRs are not available. 
  - <b>`ValueError`</b>:  If the given radio IR condition is not available for the given microphone configuration. 
+
+---
+
+<a href="../pyhton/Car.py#L670"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>function</kbd> `load_uncontrolled_condition`
+
+```python
+load_uncontrolled_condition(mic_setup: str, condition)
+```
+
+Loads the uncontrolled condition recording for a given microphone setup and condition. 
+
+
+
+**Args:**
+ 
+ - <b>`mic_setup`</b> (str):  The microphone setup to load the uncontrolled condition recording for. 
+ - <b>`condition`</b> (str):  The specific uncontrolled condition to load. 
+
+
+
+**Returns:**
+ 
+ - <b>`tuple`</b>:  A tuple containing the uncontrolled condition data as a NumPy array (N_samples x M_channels) and the sampling frequency. 
+
+
+
+**Raises:**
+ 
+ - <b>`ValueError`</b>:  If the given uncontrolled condition is not available for the given microphone setup. 
 
 ---
 

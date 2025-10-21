@@ -17,6 +17,7 @@ classdef car % full version 16kHz
         radio_irs % Returns a struck with all the available radio IRs per microphone configuration.
         noise_recordings % Returns a struck with all the available noise recordings per microphone configuration.
         ventilation_recordings % Returns a struck with all the available ventilation conditions recordings per microphone configuration.
+        uncontrolled_conditions_recordings % Returns a struck with all the available uncontrol conditions recordings per microphone configuration.
         mic_setups % Returns all the available microphones configurations.
         speaker_locations % Returns a struck with all the available speaker locations per microphone configuration.
         make % Returns the make of the car.
@@ -350,6 +351,50 @@ classdef car % full version 16kHz
             catch
             end
 
+            %% uncontrolled_conditions recordings
+
+            uncontrolled_conditions_recordings_distributed = dir([obj.path 'distributed' filesep 'uncontrolled_conditions' filesep '*.wav']);
+            for z=1:length(uncontrolled_conditions_recordings_distributed)
+                uncontrolled_conditions_recordings_distributed_aux02 = uncontrolled_conditions_recordings_distributed(z).name;
+                uncontrolled_conditions_recordings_distributed_aux02 = uncontrolled_conditions_recordings_distributed_aux02(1:end-4);
+                uncontrolled_conditions_recordings_distributed_aux{z} = uncontrolled_conditions_recordings_distributed_aux02;
+            end
+
+            try
+                uncontrolled_conditions_recordings.distributed = uncontrolled_conditions_recordings_distributed_aux';
+                obj.uncontrolled_conditions_recordings = uncontrolled_conditions_recordings;
+            catch
+            end
+
+            uncontrolled_conditions_recordings_array = dir([obj.path 'array' filesep 'uncontrolled_conditions' filesep '*.wav']);
+            for z=1:length(uncontrolled_conditions_recordings_array)
+                uncontrolled_conditions_recordings_array_aux02 = uncontrolled_conditions_recordings_array(z).name;
+                uncontrolled_conditions_recordings_array_aux02 = uncontrolled_conditions_recordings_array_aux02(1:end-4);
+                uncontrolled_conditions_recordings_array_aux{z} = uncontrolled_conditions_recordings_array_aux02;
+            end
+
+            try
+                uncontrolled_conditions_recordings.array = uncontrolled_conditions_recordings_array_aux';
+                obj.uncontrolled_conditions_recordings = uncontrolled_conditions_recordings;
+            catch
+            end
+
+
+            uncontrolled_conditions_recordings_hybrid = dir([obj.path 'hybrid' filesep 'uncontrolled_conditions' filesep '*.wav']);
+            for z=1:length(uncontrolled_conditions_recordings_hybrid)
+                uncontrolled_conditions_recordings_hybrid_aux02 = uncontrolled_conditions_recordings_hybrid(z).name;
+                uncontrolled_conditions_recordings_hybrid_aux02 = uncontrolled_conditions_recordings_hybrid_aux02(1:end-4);
+                uncontrolled_conditions_recordings_hybrid_aux{z} = uncontrolled_conditions_recordings_hybrid_aux02;
+            end
+
+            try
+                uncontrolled_conditions_recordings.hybrid = uncontrolled_conditions_recordings_hybrid_aux';
+                uncontrolled_conditions_recordings.array = uncontrolled_conditions_recordings.hybrid;
+                uncontrolled_conditions_recordings.distributed = uncontrolled_conditions_recordings.hybrid;
+                obj.uncontrolled_conditions_recordings = uncontrolled_conditions_recordings;
+            catch
+            end
+
         end
         function ir = load_ir(obj,varargin)
 
@@ -473,16 +518,22 @@ classdef car % full version 16kHz
 
             % check wav and radio
 
-            wav_list = dir([obj.path mic_setup '' filesep 'radio_IRs' filesep '*.wav']);
-            for z=1:length(wav_list)
-                wav_list_aux{z,1} = wav_list(z).name;
-            end
+            try
 
-            radio_ir_name_user = ([condition '.wav']);
-            selectedrow = strcmp(wav_list_aux,radio_ir_name_user);
+                wav_list = dir([obj.path mic_setup '' filesep 'radio_IRs' filesep '*.wav']);
+                for z=1:length(wav_list)
+                    wav_list_aux{z,1} = wav_list(z).name;
+                end
 
-            if sum(selectedrow) > 0
-            else
+                radio_ir_name_user = ([condition '.wav']);
+                selectedrow = strcmp(wav_list_aux,radio_ir_name_user);
+
+                if sum(selectedrow) > 0
+                else
+                    ME = MException('myComponent:inputError','The condition "%s" is incorrect.',condition);
+                    throw(ME)
+                end
+            catch
                 ME = MException('myComponent:inputError','The condition "%s" is incorrect.',condition);
                 throw(ME)
             end
@@ -581,7 +632,7 @@ classdef car % full version 16kHz
             %load_ventilation Loading ventilation recordings
             %
             %   Loads the ventilation recording for a given microphone
-            %   setup and condition.            
+            %   setup and condition.
             %   Input:
             %       mic_setup (char)   - The desired microphone setup to load the IR for.
             %       condition (char)   - The specific ventilation condition to load ("v'ventilation level'_w'window condition'").
@@ -649,6 +700,84 @@ classdef car % full version 16kHz
             end
 
         end
+        function unc = load_uncontrolled_condition(obj,varargin)
+
+            %
+            %load_uncontrolled_condition Loading uncontrolled conditions recordings
+            %   Loads the uncontrolled condition recording for a given microphone setup and condition.
+            %
+            %   Input:
+            %       mic_setup (char)   - The microphone setup to load the uncontrolled condition recording for.
+            %       condition (char)   - The specific uncontrolled noise condition to load in the format 'unc_xxx'.
+            %   Output:
+            %       ir (vector)   - Matrix NxM, containing the uncontrolled condition data
+            %                       N = the number of samples, M=number of
+            %                       microphones.
+            %   Example:
+            %       my_car = car(path=car_path, fs=sampling_rate);
+            %       unc = my_car.load_uncontrolled_condition("condition",'unc_001',"mic_setup",'array');
+
+            p = inputParser;
+
+
+            addParameter(p,'mic_setup','null')
+            addParameter(p,'condition','null')
+
+            parse(p,varargin{:})
+
+            mic_setup = p.Results.mic_setup;
+            condition = p.Results.condition;
+
+            % check mic_setup
+
+            searchname = ([obj.current_car '_' mic_setup]);
+            selectedrow = strcmp(obj.setup_check, searchname);
+            if sum(selectedrow) > 0
+            else
+                ME = MException('myComponent:inputError','The name of mic_setup "%s" is incorrect.',mic_setup);
+                throw(ME)
+            end
+
+
+            if obj.current_car == "Hyundai_i30"
+                [mic_setup,mic_setup_imag,mics_imag] = hyundai_aux(obj,mic_setup);
+            end
+
+            %check condition
+
+            try
+
+                wav_list = dir([obj.path mic_setup '' filesep 'uncontrolled_conditions' filesep '*.wav']);
+                for z=1:length(wav_list)
+                    wav_list_aux{z,1} = wav_list(z).name;
+                end
+
+                uncontrolled_conditions_name_user = ([condition '.wav']);
+                selectedrow = strcmp(wav_list_aux,uncontrolled_conditions_name_user);
+
+                if sum(selectedrow) > 0
+                else
+                    ME = MException('myComponent:inputError','The version "%s" is incorrect.',condition);
+                    throw(ME)
+                end
+            catch
+                ME = MException('myComponent:inputError','The version "%s" is incorrect.',condition);
+                throw(ME)
+            end
+
+            uncontrolled_conditions_name = ([obj.path mic_setup '' filesep 'uncontrolled_conditions' filesep '' condition '.wav']);
+            [unc,Fs_unc] = audioread(uncontrolled_conditions_name); %% load uncontrolled_condition
+
+            if Fs_unc ~= obj.fs
+                [P,Q] = rat(obj.fs/Fs_unc);
+                unc = resample(unc,P,Q);
+            end
+
+            if obj.current_car == "Hyundai_i30"
+                unc = hyundai_aux2(obj,unc,mic_setup_imag,mics_imag);
+            end
+
+        end
         function [S] = get_speech(obj,varargin)
 
             %
@@ -658,7 +787,7 @@ classdef car % full version 16kHz
             %   microphone setup, location, and condition.
             %
             %   Input:
-            %       mic_setup (char)   - The microphonesconfiguration to use.
+            %       mic_setup (char)   - The microphones configuration to use.
             %       location (char)   - The location of speaker inside the car.
             %       window (double)   - The window condition.
             %       ls (double or char)   - The speech effort level.
@@ -843,7 +972,7 @@ classdef car % full version 16kHz
             %   Retrieves the in-motion noise recording for a given microphone setup, condition, and microphone index.
             %
             %   Input:
-            %       mic_setup (char)   - The microphonesconfiguration to use.
+            %       mic_setup (char)   - The microphones configuration to use.
             %       speed (double)   - The speed condition.
             %       window (double)   - The window condition.
             %       version (char, optional)   - The version of the noise recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2", etc or "coarse" (Default=nan).
@@ -1195,7 +1324,7 @@ classdef car % full version 16kHz
             %   microphone setup, condition, and ventilation level.
             %
             %   Input:
-            %       mic_setup (char)   - The microphonesconfiguration to use.
+            %       mic_setup (char)   - The microphones configuration to use.
             %       window (double)   - The window condition.
             %       level (double)   - The ventilation level.
             %       version (char, optional)   - The version of the ventilation recording in case there are multiple versions. Defaults to None. Must be "ver1", "ver2", etc (Default=nan).
@@ -1376,6 +1505,130 @@ classdef car % full version 16kHz
                 V = [V ventilation(:,mic_in)];
             end
         end
+        function [UNC] = get_uncontrolled_condition(obj,varargin)
+
+
+            %
+            %get_uncontrolled_condition Loading uncontrolled conditions recordings
+            %   Retrieves the uncontrolled condition recording for a given microphone setup and condition.
+            %
+            %   Input:
+            %       mic_setup (char)   - The microphones configuration to use.
+            %       condition (char)   - The specific uncontrolled condition to load in the format 'unc_xxx'.
+            %       mics (double or char, optional)   - The microphone index or indices to use (Default=nan, all availabe microphones are used).
+            %       use_correction_gains (bool, optional)   -  A boolean indicating whether to use the correction gains (Default=true).
+            %   Output
+            %       N (vector)   - Vector NxM, The processed uncontrolled condition signal
+            %                      for the specified microphones. N = the number of samples, M = the number of channels.
+            %   Example:
+            %       my_car = car(path=car_path, fs=sampling_rate);
+            %       UNC = my_car.get_uncontrolled_condition("mic_setup",'distributed', ...
+            %       "condition",'unc_001',"use_correction_gains",false,"mics",5);
+
+
+
+            p = inputParser;
+
+
+            addParameter(p,'mic_setup','null')
+            addParameter(p,'condition','null')
+            addParameter(p,'mics',nan)
+            addParameter(p,'use_correction_gains',true)
+
+            parse(p,varargin{:})
+
+            mic_setup = p.Results.mic_setup;
+            condition = p.Results.condition;
+            mics = p.Results.mics;
+            use_correction_gains = p.Results.use_correction_gains;
+
+            % check mic_setup
+
+            searchname = ([obj.current_car '_' mic_setup]);
+            selectedrow = strcmp(obj.setup_check, searchname);
+            if sum(selectedrow) > 0
+            else
+                ME = MException('myComponent:inputError','The name of mic_setup "%s" is incorrect.',mic_setup);
+                throw(ME)
+            end
+
+            if obj.current_car == "Hyundai_i30"
+                [mic_setup,mic_setup_imag] = hyundai_aux(obj,mic_setup);
+            end
+
+            try
+                if isnan(mics)
+                    mics = 'None';
+                end
+            catch
+            end
+
+            % check mics
+
+            if obj.current_car == "Hyundai_i30"
+                [mics] = hyundai_aux3(obj,mics,mic_setup_imag);
+            else
+                if isnumeric(mics)
+                    for m=1:length(mics)
+                        if mics(m) >= 1 && mics(m) <= 8
+                        else
+                            ME = MException('myComponent:inputError','The value of the variable "mics" is incorrect.');
+                            throw(ME)
+                        end
+                    end
+                else
+                    if mics == "None"
+                        mics = [1,2,3,4,5,6,7,8];
+                    else
+                        ME = MException('myComponent:inputError','The value of the variable "mics" is incorrect.');
+                        throw(ME)
+                    end
+                end
+            end
+
+            % check condition
+
+            try
+
+                wav_list = dir([obj.path mic_setup '' filesep 'uncontrolled_conditions' filesep '*.wav']);
+                for z=1:length(wav_list)
+                    wav_list_aux{z,1} = wav_list(z).name;
+                end
+
+                uncontrolled_conditions_name_user = ([ condition '.wav']);
+                selectedrow = strcmp(wav_list_aux,uncontrolled_conditions_name_user);
+
+                if sum(selectedrow) == 0
+                    uncontrolled_conditions_name_user = ([ condition '.wav']);
+                    selectedrow = strcmp(wav_list_aux,uncontrolled_conditions_name_user);
+                    if sum(selectedrow) > 0
+                    else
+                        ME = MException('myComponent:inputError','The value of the variable "version" is incorrect.');
+                        throw(ME)
+                    end
+                end
+            catch
+                ME = MException('myComponent:inputError','The version "%s" is incorrect.',condition);
+                throw(ME)
+            end
+
+            UNC = []; % vector of uncontrolled condition
+
+            [unc] = load_uncontrolled_condition(obj,"mic_setup",mic_setup,"condition",condition);
+
+            if (use_correction_gains)
+                for j=1:8
+                    unc(:,j) = unc(:,j) * obj.correction_lin(j);
+                end
+            else
+            end
+
+            for k=1:length(mics) %% l = this program will run l times. The loop is related to the quantity of microphones which choices for user.
+                mic_in = mics(1,k); %% the k table is a table which shows what mic will export.
+                UNC = [UNC unc(:,mic_in)];
+            end
+
+        end
         function [components] = get_components(obj,varargin)
 
 
@@ -1386,7 +1639,7 @@ classdef car % full version 16kHz
             %   Speech, radio, and ventilation are optional.
             %
             %   Input:
-            %       mic_setup (char)   - The microphonesconfiguration to use.
+            %       mic_setup (char)   - The microphones configuration to use.
             %       location (char)   - The location of speaker inside the car.
             %       speed (double)   - The speed condition.
             %       window (double)   - The window condition.
@@ -1618,6 +1871,61 @@ classdef car % full version 16kHz
                 ME = MException('myComponent:inputError','The arguments are not correct. The freq must be positive number. Theta must be real number.');
                 throw(ME)
             end
+
+        end
+        function dBA = dBFS_to_dBA_mono(obj,varargin)
+
+            %
+            %dBFS_to_dBA_mono Calculation dBA Leq value
+            %   Convert a mono time-domain signal level from dBFS to an dBA Leq value.
+            %
+            %   Input:
+            %       signal (double)   -  1-D array of audio samples (mono).
+            %       channel (double)   - The microphone configuration channel index that 'signal' comes from.
+            %       fs (double)   - Sampling frequency of `signal` in Hz.
+            %   Output:
+            %       dBA (double)   - The dBA Leq value corresponding to the input signal.
+            %   Example:
+            %       my_car = car(path=car_path, fs=sampling_rate);
+            %       dBA = my_car.dBFS_to_dBA_mono("signal",speech_mic5, "channel",5, "fs",16000)
+
+            p = inputParser;
+
+            addParameter(p,'signal','null')
+            addParameter(p,'channel','null')
+            addParameter(p,'fs','null')
+
+            parse(p,varargin{:})
+
+            signal = p.Results.signal;
+            channel = p.Results.channel;
+            fs = p.Results.fs;
+
+            [~,s2_signal]  = size(signal);
+            [~,s2_channel] = size(channel);
+
+            if isnumeric(fs)
+                if s2_signal == 1 % mono
+                    if s2_channel ==1 && channel >= 1 && channel <=8 % 1,2,3,4,5,6,7,8
+                        AWeighting = weightingFilter('A-weighting',fs);
+                        aSOSFilter = getFilter(AWeighting);
+                        aFiltered_signalIN = aSOSFilter(signal);
+                        dBFS_Leq_A = 10*(log10(norm(aFiltered_signalIN)^2/length(aFiltered_signalIN)));
+                        dBA = dBFS_Leq_A+obj.dBFS_A_to_dBA(channel);
+                    else
+                        ME = MException('myComponent:inputError','The value of the variable "channel" is incorrect.');
+                        throw(ME)
+                    end
+                else
+                    ME = MException('myComponent:inputError','The signal is not mono');
+                    throw(ME)
+                end
+            else
+                ME = MException('myComponent:inputError','The value of the variable "fs" is incorrect. It must be double');
+                throw(ME)
+            end
+
+
 
         end
         function angles = speaker_locations_angles(obj,varargin)
